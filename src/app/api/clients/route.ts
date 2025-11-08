@@ -1,0 +1,139 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebaseAdmin';
+import { Client } from '@/types';
+
+const CLIENTS_COLLECTION = 'clients';
+
+// GET - Fetch all clients or filter by userId
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    let query = adminDb.collection(CLIENTS_COLLECTION);
+
+    if (userId) {
+      query = query.where('userId', '==', userId) as any;
+    }
+
+    const snapshot = await query.get();
+
+    const clients: Client[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      clients.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        meetingDate: data.meetingDate?.toDate(),
+      } as Client);
+    });
+
+    // Sort by most recent first
+    clients.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return NextResponse.json({ clients });
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch clients' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Create a new client
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    const newClient: Omit<Client, 'id'> = {
+      name: body.name,
+      email: body.email,
+      company: body.company,
+      industry: body.industry,
+      phone: body.phone,
+      onboardingStage: body.onboardingStage || 'created',
+      discoveryLinkId: body.discoveryLinkId || Math.random().toString(36).substring(7),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: body.userId || 'demo-user', // In production, get from auth
+    };
+
+    const docRef = await adminDb.collection(CLIENTS_COLLECTION).add({
+      ...newClient,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const client: Client = {
+      id: docRef.id,
+      ...newClient,
+    };
+
+    return NextResponse.json({ client }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating client:', error);
+    return NextResponse.json(
+      { error: 'Failed to create client' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update an existing client
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Client ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await adminDb
+      .collection(CLIENTS_COLLECTION)
+      .doc(id)
+      .update({
+        ...updates,
+        updatedAt: new Date(),
+      });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating client:', error);
+    return NextResponse.json(
+      { error: 'Failed to update client' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete a client
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Client ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await adminDb.collection(CLIENTS_COLLECTION).doc(id).delete();
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting client:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete client' },
+      { status: 500 }
+    );
+  }
+}

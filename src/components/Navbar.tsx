@@ -23,6 +23,7 @@ export default function Navbar() {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/marketing/campaigns', label: 'Marketing' },
     { href: '/client-onboarding', label: 'Client Onboarding' },
+    { href: '/clients', label: 'Clients' },
   ];
 
   return (
