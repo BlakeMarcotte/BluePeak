@@ -61,7 +61,21 @@ export interface Campaign {
 }
 
 // User Types
+export type UserRole = 'admin' | 'team_member' | 'client';
+
 export interface User {
+  id: string; // Firebase Auth UID
+  email: string;
+  displayName: string;
+  role: UserRole;
+  clientId?: string; // Link to Client record if role='client'
+  createdAt: Date;
+  updatedAt: Date;
+  lastLoginAt?: Date;
+}
+
+// Auth Context User (for Firebase Auth)
+export interface AuthUser {
   uid: string;
   email: string | null;
   displayName?: string | null;

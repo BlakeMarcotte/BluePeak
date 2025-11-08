@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       `attachment; filename="${clientName.replace(/[^a-z0-9]/gi, '_')}_OnePager.pdf"`
     );
 
-    return new NextResponse(pdfBuffer, { headers });
+    return new NextResponse(new Uint8Array(pdfBuffer), { headers });
   } catch (error) {
     console.error('Error rendering PDF:', error);
     return NextResponse.json(

@@ -54,12 +54,25 @@ export async function POST(request: NextRequest) {
       displayName: clientData.name,
     });
 
+    const now = new Date();
+
+    // Create User record in database with role='client'
+    await adminDb.collection('users').doc(userRecord.uid).set({
+      email,
+      displayName: clientData.name,
+      role: 'client',
+      clientId: clientDoc.id, // Link to Client record
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now,
+    });
+
     // Update client record with auth info
     await adminDb.collection(CLIENTS_COLLECTION).doc(clientDoc.id).update({
       hasAccount: true,
       firebaseAuthUid: userRecord.uid,
-      accountCreatedAt: new Date(),
-      updatedAt: new Date(),
+      accountCreatedAt: now,
+      updatedAt: now,
     });
 
     return NextResponse.json({

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -11,7 +12,6 @@ export default function SignupPage() {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,9 +25,33 @@ export default function SignupPage() {
     try {
       setError('');
       setLoading(true);
-      await signup(email, password, displayName);
+
+      // Create Firebase Auth account
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update display name in Firebase Auth
+      await updateProfile(user, { displayName });
+
+      // Create User record in database
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.uid,
+          email: user.email,
+          displayName,
+          role: 'team_member', // Internal team members are 'team_member' by default
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create user profile');
+      }
+
       router.push('/dashboard');
     } catch (err: any) {
+      console.error('Signup error:', err);
       setError(err.message || 'Failed to create account');
     } finally {
       setLoading(false);
