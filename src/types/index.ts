@@ -71,10 +71,16 @@ export interface Client {
   discoveryData?: DiscoveryData;
   conversationHistory?: DiscoveryMessage[];
   proposalId?: string;
+  proposal?: ClientProposal;
   meetingDate?: Date;
   createdAt: Date;
   updatedAt: Date;
   userId: string; // BluePeak team member who added them
+
+  // Client Portal Auth Fields
+  hasAccount: boolean; // Has the client created a portal account?
+  firebaseAuthUid?: string; // Firebase Auth UID when client creates account
+  accountCreatedAt?: Date; // When they created their portal account
 }
 
 // Client Onboarding Types

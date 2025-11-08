@@ -172,7 +172,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         {isComplete && (
           <div className="flex justify-center">
             <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">
-              Discovery complete! Generating your proposal...
+              Thank you! Your responses have been recorded.
             </div>
           </div>
         )}
