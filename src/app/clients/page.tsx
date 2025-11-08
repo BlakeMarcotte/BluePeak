@@ -72,6 +72,17 @@ export default function ClientsPage() {
     setClients([clientWithDates, ...clients]);
   };
 
+  const handleViewClient = (client: Client) => {
+    // Copy discovery link to clipboard
+    if (client.discoveryLinkId) {
+      const link = `${window.location.origin}/portal/${client.discoveryLinkId}`;
+      navigator.clipboard.writeText(link);
+      alert(`Discovery link copied to clipboard!\n\n${link}\n\nShare this with ${client.name} to complete their discovery questionnaire.`);
+    } else {
+      alert('No discovery link available for this client.');
+    }
+  };
+
   const filteredClients = clients.filter((client) => {
     const matchesSearch =
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -236,8 +247,11 @@ export default function ClientsPage() {
                         {client.createdAt.toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button className="text-purple-600 hover:text-purple-900 mr-4">
-                          View
+                        <button
+                          onClick={() => handleViewClient(client)}
+                          className="text-purple-600 hover:text-purple-900 mr-4"
+                        >
+                          Copy Link
                         </button>
                         <button className="text-gray-600 hover:text-gray-900">
                           Edit

@@ -147,17 +147,20 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload logo');
+        const errorData = await response.json();
+        console.error('Upload error response:', errorData);
+        throw new Error(errorData.details || errorData.error || 'Failed to upload logo');
       }
 
       const { logoUrl } = await response.json();
+      console.log('✅ Logo uploaded successfully:', logoUrl);
 
       // Complete discovery with logo URL
       const discoveryData = extractDiscoveryData(messages);
       onComplete(discoveryData, messages, logoUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logo upload error:', error);
-      setUploadError('Failed to upload logo. Please try again.');
+      setUploadError(error.message || 'Failed to upload logo. Please try again.');
     } finally {
       setIsUploading(false);
     }

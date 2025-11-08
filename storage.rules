@@ -6,5 +6,17 @@ service firebase.storage {
     match /campaigns/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Allow logo uploads (via server-side admin SDK)
+    match /logos/{allPaths=**} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null; // Authenticated users can upload
+    }
+
+    // Allow client uploads for discovery
+    match /client-uploads/{allPaths=**} {
+      allow read: if true; // Public read access
+      allow write: if true; // Anyone can upload (discovery questionnaire)
+    }
   }
 }

@@ -314,6 +314,11 @@ export default function CampaignDetailPage() {
 
     setSavingPdf(true);
     try {
+      // Debug: Log auth state
+      console.log('Current user:', user?.uid);
+      console.log('Campaign userId:', campaign.userId);
+      console.log('Match:', user?.uid === campaign.userId);
+
       // Update the content with the new PDF data
       const content = campaign.contents.find(c => c.id === contentId);
       if (!content) throw new Error('Content not found');
@@ -331,6 +336,7 @@ export default function CampaignDetailPage() {
       setEditedPdfData(null);
     } catch (error) {
       console.error('Error saving PDF edit:', error);
+      console.error('Full error:', error);
       alert('Failed to save PDF changes. Please try again.');
     } finally {
       setSavingPdf(false);
