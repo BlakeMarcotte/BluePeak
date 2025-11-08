@@ -31,7 +31,22 @@ function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Redirect to client dashboard
+      // Check if this user is actually a client (not internal team)
+      const checkResponse = await fetch(`/api/client-auth/profile?uid=${user.uid}`);
+      if (!checkResponse.ok) {
+        // Not a client account - this is an internal team member
+        await auth.signOut(); // Sign them out
+        setError('This is an internal team account. Please use the BluePeak team login.');
+        setIsLoading(false);
+
+        // Redirect to internal login after 2 seconds
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+        return;
+      }
+
+      // Valid client account, proceed to dashboard
       router.push('/client-portal/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
@@ -128,6 +143,15 @@ function LoginForm() {
             Need help? Email us at{' '}
             <a href="mailto:hello@bluepeak.com" className="text-purple-600 hover:underline">
               hello@bluepeak.com
+            </a>
+          </p>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
+          <p>
+            BluePeak team member?{' '}
+            <a href="/login" className="text-purple-600 hover:text-purple-700 font-medium">
+              Use internal login
             </a>
           </p>
         </div>
