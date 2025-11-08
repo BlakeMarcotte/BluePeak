@@ -14,10 +14,10 @@ export interface CampaignFormData {
   topic: string;
   targetAudience: string;
   brandVoice?: string;
-  contentTypes: ContentType[];
 }
 
 export interface GeneratedContent {
+  id?: string;
   type: ContentType;
   content: string;
   wordCount?: number;

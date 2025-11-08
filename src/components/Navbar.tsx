@@ -21,7 +21,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/marketing', label: 'Marketing' },
+    { href: '/marketing/campaigns', label: 'Marketing' },
     { href: '/client-onboarding', label: 'Client Onboarding' },
   ];
 
@@ -38,7 +38,7 @@ export default function Navbar() {
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
-                const isActive = pathname === link.href;
+                const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
                 return (
                   <Link
                     key={link.href}
@@ -77,7 +77,7 @@ export default function Navbar() {
         {/* Mobile Navigation */}
         <nav className="md:hidden pb-3 pt-2 space-y-1 border-t border-slate-100 mt-2">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href;
+            const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
             return (
               <Link
                 key={link.href}

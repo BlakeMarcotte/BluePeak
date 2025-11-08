@@ -19,15 +19,32 @@ export async function POST(request: NextRequest) {
     // Fetch images as base64
     const images = [];
 
+    // Helper function to detect media type
+    const getMediaType = (url: string, contentType?: string | null): 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' => {
+      if (contentType) {
+        if (contentType.includes('png')) return 'image/png';
+        if (contentType.includes('jpeg') || contentType.includes('jpg')) return 'image/jpeg';
+        if (contentType.includes('webp')) return 'image/webp';
+        if (contentType.includes('gif')) return 'image/gif';
+      }
+      // Fallback to URL extension
+      const urlLower = url.toLowerCase();
+      if (urlLower.includes('.png')) return 'image/png';
+      if (urlLower.includes('.webp')) return 'image/webp';
+      if (urlLower.includes('.gif')) return 'image/gif';
+      return 'image/jpeg'; // default
+    };
+
     if (logoUrl) {
       const logoResponse = await fetch(logoUrl);
       const logoBuffer = await logoResponse.arrayBuffer();
       const logoBase64 = Buffer.from(logoBuffer).toString('base64');
+      const mediaType = getMediaType(logoUrl, logoResponse.headers.get('content-type'));
       images.push({
         type: 'image' as const,
         source: {
           type: 'base64' as const,
-          media_type: 'image/jpeg' as const,
+          media_type: mediaType,
           data: logoBase64,
         },
       });
@@ -37,11 +54,12 @@ export async function POST(request: NextRequest) {
       const screenshotResponse = await fetch(screenshotUrl);
       const screenshotBuffer = await screenshotResponse.arrayBuffer();
       const screenshotBase64 = Buffer.from(screenshotBuffer).toString('base64');
+      const mediaType = getMediaType(screenshotUrl, screenshotResponse.headers.get('content-type'));
       images.push({
         type: 'image' as const,
         source: {
           type: 'base64' as const,
-          media_type: 'image/jpeg' as const,
+          media_type: mediaType,
           data: screenshotBase64,
         },
       });
@@ -49,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Analyze brand with Claude Vision
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages: [
         {

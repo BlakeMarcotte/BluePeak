@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CampaignFormData, ContentType } from '@/types';
+import { CampaignFormData } from '@/types';
 
 interface CampaignFormProps {
   onSubmit: (data: CampaignFormData, logo: File | null, screenshot: File | null) => void;
@@ -19,14 +19,6 @@ const INDUSTRIES = [
   'SaaS Infrastructure',
 ];
 
-const CONTENT_TYPES: { value: ContentType; label: string; description: string }[] = [
-  { value: 'blog', label: 'Blog Post', description: '800-1200 words, SEO-optimized' },
-  { value: 'linkedin', label: 'LinkedIn Post', description: 'Professional, 1300 char max' },
-  { value: 'twitter', label: 'Twitter Thread', description: '5-7 tweets, engaging' },
-  { value: 'email', label: 'Email Copy', description: 'Subject + body, conversion-focused' },
-  { value: 'ad-copy', label: 'Ad Copy', description: 'Headline + description + CTA' },
-];
-
 export default function CampaignForm({ onSubmit, loading = false }: CampaignFormProps) {
   const [formData, setFormData] = useState<CampaignFormData>({
     clientName: '',
@@ -34,7 +26,6 @@ export default function CampaignForm({ onSubmit, loading = false }: CampaignForm
     topic: '',
     targetAudience: '',
     brandVoice: '',
-    contentTypes: [],
   });
 
   const [logo, setLogo] = useState<File | null>(null);
@@ -42,22 +33,7 @@ export default function CampaignForm({ onSubmit, loading = false }: CampaignForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formData.contentTypes.length === 0) {
-      alert('Please select at least one content type');
-      return;
-    }
-
     onSubmit(formData, logo, screenshot);
-  };
-
-  const toggleContentType = (type: ContentType) => {
-    setFormData((prev) => ({
-      ...prev,
-      contentTypes: prev.contentTypes.includes(type)
-        ? prev.contentTypes.filter((t) => t !== type)
-        : [...prev.contentTypes, type],
-    }));
   };
 
   return (
@@ -193,36 +169,6 @@ export default function CampaignForm({ onSubmit, loading = false }: CampaignForm
         </div>
       </div>
 
-      {/* Content Types */}
-      <div className="bg-white border border-slate-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Content Types *</h3>
-        <p className="text-sm text-slate-600 mb-4">Select which types of content to generate</p>
-
-        <div className="space-y-3">
-          {CONTENT_TYPES.map(({ value, label, description }) => (
-            <label
-              key={value}
-              className={`flex items-start p-3 border rounded-md cursor-pointer transition-colors ${
-                formData.contentTypes.includes(value)
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={formData.contentTypes.includes(value)}
-                onChange={() => toggleContentType(value)}
-                className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 rounded"
-              />
-              <div className="ml-3">
-                <div className="text-sm font-medium text-slate-900">{label}</div>
-                <div className="text-xs text-slate-500">{description}</div>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-
       {/* Submit Button */}
       <div className="flex justify-end">
         <button
@@ -230,7 +176,7 @@ export default function CampaignForm({ onSubmit, loading = false }: CampaignForm
           disabled={loading}
           className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-sm"
         >
-          {loading ? 'Generating Content...' : 'Generate Campaign'}
+          {loading ? 'Creating Campaign...' : 'Create Campaign'}
         </button>
       </div>
     </form>
