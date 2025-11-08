@@ -144,15 +144,28 @@ export default function OnboardingPipeline({
         );
       case 'proposal_accepted':
         return (
-          <div className="flex items-center text-sm text-green-600 font-medium">
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Proposal Accepted!
+          <div className="flex items-center gap-3">
+            <div className="flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+              <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-sm font-semibold text-green-700">🎉 Proposal Accepted!</span>
+            </div>
+            {client.proposal?.pdfUrl && (
+              <button
+                onClick={() => downloadPDF(client.proposal!.pdfUrl, `${client.company}_Proposal.pdf`)}
+                className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </button>
+            )}
           </div>
         );
       default:
@@ -172,7 +185,11 @@ export default function OnboardingPipeline({
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-500">
-            Step {client.onboardingStage === 'meeting_scheduled' ? STAGES.length : currentStageIndex + 1} of {STAGES.length}
+            {client.onboardingStage === 'proposal_accepted' ? (
+              <span className="text-green-600 font-semibold">✓ Complete</span>
+            ) : (
+              <>Step {client.onboardingStage === 'meeting_scheduled' ? STAGES.length : currentStageIndex + 1} of {STAGES.length}</>
+            )}
           </div>
         </div>
       </div>
@@ -181,6 +198,11 @@ export default function OnboardingPipeline({
       <div className="mb-6">
         <div className="flex items-center">
           {STAGES.map((stage, index) => {
+            // When proposal is accepted, all steps are complete
+            if (client.onboardingStage === 'proposal_accepted') {
+              return { isComplete: true, isCurrent: false };
+            }
+
             // When proposal is generated at discovery_complete, mark discovery as complete
             const isComplete =
               index < currentStageIndex ||
@@ -195,6 +217,9 @@ export default function OnboardingPipeline({
               ? stage.stage === 'proposal_accepted' // Show proposal_accepted as current when waiting for acceptance
               : index === currentStageIndex;
 
+            return { isComplete, isCurrent };
+          }).map(({ isComplete, isCurrent }, index) => {
+            const stage = STAGES[index];
             const isLast = index === STAGES.length - 1;
 
             return (
