@@ -21,6 +21,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   const [isComplete, setIsComplete] = useState(false);
   const [showLogoUpload, setShowLogoUpload] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -157,10 +158,28 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         setUploadError('File size must be less than 5MB');
         return;
       }
+
+      // Clean up previous preview URL
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      // Create preview URL
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
       setSelectedFile(file);
       setUploadError('');
     }
   };
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleLogoUpload = async () => {
     if (!selectedFile) return;
@@ -267,6 +286,19 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
             </p>
 
             <div className="space-y-4">
+              {/* Image Preview */}
+              {previewUrl && (
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <img
+                      src={previewUrl}
+                      alt="Logo preview"
+                      className="max-w-xs max-h-48 rounded-lg border-2 border-purple-200 object-contain bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center space-x-3">
                 <input
                   ref={fileInputRef}
@@ -279,7 +311,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
                   onClick={() => fileInputRef.current?.click()}
                   className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
-                  Choose File
+                  {selectedFile ? 'Change File' : 'Choose File'}
                 </button>
                 {selectedFile && (
                   <span className="text-sm text-gray-600">

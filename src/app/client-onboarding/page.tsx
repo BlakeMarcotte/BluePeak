@@ -7,6 +7,9 @@ import AddClientModal from '@/components/AddClientModal';
 import OnboardingPipeline from '@/components/OnboardingPipeline';
 import ProgressReportGenerator from '@/components/ProgressReportGenerator';
 import { Client } from '@/types';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import confetti from 'canvas-confetti';
 
 type TabType = 'pipeline' | 'reports';
 
@@ -15,6 +18,9 @@ export default function ClientOnboardingPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
 
   // Fetch clients on mount - filter for active onboarding only
   useEffect(() => {
@@ -34,11 +40,8 @@ export default function ClientOnboardingPage() {
         updatedAt: new Date(client.updatedAt),
         meetingDate: client.meetingDate ? new Date(client.meetingDate) : undefined,
       }));
-      // Filter for clients not yet completed
-      const activeClients = clientsWithDates.filter(
-        (c: Client) => c.onboardingStage !== 'completed' && c.onboardingStage !== 'proposal_accepted'
-      );
-      setClients(activeClients);
+      // Show all clients in the onboarding pipeline (including accepted ones)
+      setClients(clientsWithDates);
     } catch (error) {
       console.error('Error fetching clients:', error);
     } finally {
@@ -98,10 +101,15 @@ export default function ClientOnboardingPage() {
     }
 
     try {
-      // Show loading state
-      alert('Generating proposal... This may take a moment.');
+      // Show loading modal
+      setIsGeneratingProposal(true);
+      setGenerationProgress(0);
+      setGenerationStatus('Initializing proposal generation...');
 
       // Step 1: Generate proposal text with Claude
+      setGenerationProgress(10);
+      setGenerationStatus('Analyzing discovery conversation with AI...');
+
       const textResponse = await fetch('/api/generate-proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -112,14 +120,21 @@ export default function ClientOnboardingPage() {
 
       if (!textResponse.ok) throw new Error('Failed to generate proposal text');
 
+      setGenerationProgress(50);
+      setGenerationStatus('Proposal content generated! Creating PDF document...');
+
       const proposalData = await textResponse.json();
 
       // Step 2: Generate PDF from the proposal data
+      setGenerationProgress(60);
+      setGenerationStatus('Formatting proposal into professional PDF...');
+
       const pdfResponse = await fetch('/api/generate-proposal-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientName: client.company || client.name,
+          logoUrl: client.logoUrl, // Include client logo
           executiveSummary: proposalData.executiveSummary,
           scopeOfWork: proposalData.scopeOfWork,
           timeline: proposalData.timeline,
@@ -130,30 +145,75 @@ export default function ClientOnboardingPage() {
 
       if (!pdfResponse.ok) throw new Error('Failed to generate PDF');
 
-      const { pdfData } = await pdfResponse.json();
+      const { pdfData, filename } = await pdfResponse.json();
 
-      // Create the proposal object
+      // Step 3: Upload PDF to Firebase Storage
+      setGenerationProgress(85);
+      setGenerationStatus('Uploading PDF to cloud storage...');
+
+      // Convert base64 data URI to blob
+      const base64Data = pdfData.split(',')[1];
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))],
+        { type: 'application/pdf' }
+      );
+
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, `proposals/${clientId}/${filename}`);
+      await uploadBytes(storageRef, pdfBlob);
+
+      // Get permanent download URL
+      const pdfUrl = await getDownloadURL(storageRef);
+
+      setGenerationProgress(95);
+      setGenerationStatus('Saving proposal to client record...');
+
+      // Create simplified proposal object with just the PDF URL
       const proposal = {
+        pdfUrl, // Permanent Firebase Storage URL
         clientName: client.company || client.name,
-        discoveryData: client.discoveryData || {},
-        executiveSummary: proposalData.executiveSummary,
-        scopeOfWork: proposalData.scopeOfWork,
-        timeline: proposalData.timeline,
-        pricing: proposalData.pricing,
-        deliverables: proposalData.deliverables,
-        pdfUrl: pdfData, // Store the data URI directly
-        generatedAt: new Date(),
+        generatedAt: new Date().toISOString(),
       };
 
-      // Update the client with the proposal (keep stage at discovery_complete)
-      await updateClient(clientId, {
-        proposal,
-        // Don't change onboardingStage - client will schedule meeting first
+      // Update client with proposal (keep at discovery_complete, don't auto-advance)
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: clientId,
+          proposal,
+          // Don't change stage - let it stay at discovery_complete until client schedules meeting
+        }),
       });
 
-      alert('Proposal generated successfully! Client can now view and download the PDF from their dashboard.');
+      if (!response.ok) {
+        throw new Error('Failed to save proposal to client');
+      }
+
+      // Update local state
+      const proposalWithDate = {
+        ...proposal,
+        generatedAt: new Date(proposal.generatedAt),
+      };
+
+      setClients(
+        clients.map((c) =>
+          c.id === clientId
+            ? { ...c, proposal: proposalWithDate }
+            : c
+        )
+      );
+
+      setGenerationProgress(100);
+      setGenerationStatus('Proposal generated successfully!');
+
+      // Wait a moment to show 100% before closing
+      setTimeout(() => {
+        setIsGeneratingProposal(false);
+      }, 1000);
     } catch (error) {
       console.error('Error generating proposal:', error);
+      setIsGeneratingProposal(false);
       alert('Failed to generate proposal. Please try again.');
     }
   };
@@ -162,9 +222,51 @@ export default function ClientOnboardingPage() {
     const client = clients.find((c) => c.id === clientId);
     if (!client) return;
 
-    await updateClient(clientId, { onboardingStage: 'proposal_sent' });
+    await updateClient(clientId, { onboardingStage: 'proposal_accepted' });
 
-    alert(`Proposal sent to ${client.email}!`);
+    // Trigger confetti celebration with multiple bursts!
+    const count = 200;
+    const defaults = {
+      origin: { y: 0.7 }
+    };
+
+    function fire(particleRatio: number, opts: any) {
+      confetti({
+        ...defaults,
+        ...opts,
+        particleCount: Math.floor(count * particleRatio)
+      });
+    }
+
+    fire(0.25, {
+      spread: 26,
+      startVelocity: 55,
+    });
+
+    fire(0.2, {
+      spread: 60,
+    });
+
+    fire(0.35, {
+      spread: 100,
+      decay: 0.91,
+      scalar: 0.8
+    });
+
+    fire(0.1, {
+      spread: 120,
+      startVelocity: 25,
+      decay: 0.92,
+      scalar: 1.2
+    });
+
+    fire(0.1, {
+      spread: 120,
+      startVelocity: 45,
+    });
+
+    // Refresh clients to show updated stage
+    fetchClients();
   };
 
   return (
@@ -350,6 +452,73 @@ export default function ClientOnboardingPage() {
         onClientAdded={handleClientAdded}
         isQuickAdd
       />
+
+      {/* Proposal Generation Loading Modal */}
+      {isGeneratingProposal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black/50 transition-opacity" />
+
+            {/* Modal */}
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-8 z-10">
+              <div className="text-center">
+                {/* Icon */}
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 mb-4">
+                  <svg
+                    className="h-8 w-8 text-purple-600 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Generating Proposal
+                </h3>
+
+                {/* Status */}
+                <p className="text-sm text-gray-600 mb-6">
+                  {generationStatus}
+                </p>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${generationProgress}%` }}
+                  ></div>
+                </div>
+
+                {/* Percentage */}
+                <p className="text-sm font-medium text-gray-700">
+                  {generationProgress}%
+                </p>
+
+                {/* Info */}
+                <p className="text-xs text-gray-500 mt-4">
+                  This may take 30-60 seconds. Please don't close this window.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 }

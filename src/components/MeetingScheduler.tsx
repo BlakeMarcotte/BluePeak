@@ -86,9 +86,8 @@ export default function MeetingScheduler({ clientId, onScheduled }: MeetingSched
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: clientId,
-          proposal: {
-            proposalMeetingDate: selectedSlot,
-          },
+          // Use Firestore field update syntax to update nested field without replacing entire proposal
+          'proposal.proposalMeetingDate': selectedSlot.toISOString(),
           onboardingStage: 'meeting_scheduled',
         }),
       });

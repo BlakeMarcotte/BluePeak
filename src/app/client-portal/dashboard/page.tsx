@@ -8,13 +8,30 @@ import { Client } from '@/types';
 import ClientPortalNav from '@/components/ClientPortalNav';
 import MeetingScheduler from '@/components/MeetingScheduler';
 
+// Helper function to download PDF from Firebase Storage URL
+const downloadPDF = (url: string, filename: string) => {
+  // Add response-content-disposition parameter to force download
+  const downloadUrl = new URL(url);
+  downloadUrl.searchParams.set('response-content-disposition', `attachment; filename="${filename}"`);
+
+  // Create a temporary anchor element to trigger download
+  const link = document.createElement('a');
+  link.href = downloadUrl.toString();
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+
+  // Trigger download
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 export default function ClientDashboardPage() {
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showScheduler, setShowScheduler] = useState(false);
-  const [showProposal, setShowProposal] = useState(false);
 
   useEffect(() => {
     // Check auth state
@@ -64,6 +81,34 @@ export default function ClientDashboardPage() {
     setShowScheduler(false);
     alert('Meeting confirmed! You will receive a calendar invite shortly.');
   };
+
+  const handleAcceptProposal = async () => {
+    if (!client) return;
+
+    try {
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          onboardingStage: 'proposal_accepted',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to accept proposal');
+
+      // Update local state
+      setClient({
+        ...client,
+        onboardingStage: 'proposal_accepted',
+      });
+
+      alert('🎉 Proposal accepted! We\'re excited to work with you!');
+    } catch (error) {
+      console.error('Error accepting proposal:', error);
+      alert('Failed to accept proposal. Please try again.');
+    }
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -103,13 +148,21 @@ export default function ClientDashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Proposal</span>
-                <span className="text-sm font-medium text-yellow-600">
-                  {client?.onboardingStage === 'proposal_sent' || client?.onboardingStage === 'proposal_accepted' ? '✓ Sent' : 'In Progress'}
+                <span className={`text-sm font-medium ${
+                  client?.onboardingStage === 'proposal_accepted' ? 'text-green-600' :
+                  client?.proposal ? 'text-yellow-600' : 'text-gray-400'
+                }`}>
+                  {client?.onboardingStage === 'proposal_accepted' ? '✓ Accepted' :
+                   client?.proposal ? '✓ Sent' : 'Pending'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Kickoff Meeting</span>
-                <span className="text-sm font-medium text-gray-400">Pending</span>
+                <span className={`text-sm font-medium ${
+                  client?.proposal?.proposalMeetingDate ? 'text-green-600' : 'text-gray-400'
+                }`}>
+                  {client?.proposal?.proposalMeetingDate ? '✓ Scheduled' : 'Pending'}
+                </span>
               </div>
             </div>
           </div>
@@ -137,17 +190,21 @@ export default function ClientDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-2">
-              <button className="w-full text-left px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-medium text-sm transition-colors">
-                View Proposal
-              </button>
+              {client?.proposal?.pdfUrl && (
+                <a
+                  href={client.proposal.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full block text-left px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-medium text-sm transition-colors"
+                >
+                  View Proposal
+                </a>
+              )}
               <button
                 onClick={() => router.push('/client-portal/marketing')}
                 className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors"
               >
                 Content Library
-              </button>
-              <button className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors">
-                Analytics
               </button>
             </div>
           </div>
@@ -156,79 +213,32 @@ export default function ClientDashboardPage() {
         {/* Proposal Section */}
         {client?.proposal && !showScheduler ? (
           <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold text-gray-900">Your Marketing Proposal</h3>
-              {!showProposal && (
-                <button
-                  onClick={() => setShowProposal(true)}
-                  className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                >
-                  View Full Proposal
-                </button>
-              )}
-              {showProposal && (
-                <button
-                  onClick={() => setShowProposal(false)}
-                  className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-                >
-                  Hide Proposal
-                </button>
-              )}
+            <h3 className="text-2xl font-semibold text-gray-900 mb-6">Your Marketing Proposal</h3>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mb-6">
+              <a
+                href={client.proposal.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                View PDF
+              </a>
+              <button
+                onClick={() => downloadPDF(client.proposal.pdfUrl, `${client.company}_Proposal.pdf`)}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </button>
             </div>
-
-            {showProposal && (
-              <div className="prose max-w-none space-y-6">
-                {/* Executive Summary */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Executive Summary</h4>
-                  <p className="text-gray-700 whitespace-pre-wrap">{client.proposal.executiveSummary}</p>
-                </div>
-
-                {/* Scope of Work */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Scope of Work</h4>
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.scopeOfWork }} />
-                </div>
-
-                {/* Timeline */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Timeline</h4>
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.timeline }} />
-                </div>
-
-                {/* Pricing */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Investment</h4>
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.pricing }} />
-                </div>
-
-                {/* Deliverables */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Deliverables</h4>
-                  <ul className="list-disc list-inside text-gray-700 space-y-1">
-                    {client.proposal.deliverables.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {/* Download Button */}
-            {client.proposal.pdfUrl && (
-              <div className="mt-6 flex gap-3">
-                <a
-                  href={client.proposal.pdfUrl}
-                  download={`${client.company}_Proposal.pdf`}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Download PDF
-                </a>
-              </div>
-            )}
 
             {/* Meeting CTA */}
             {!client.proposal.proposalMeetingDate ? (
@@ -244,30 +254,56 @@ export default function ClientDashboardPage() {
                   Schedule Meeting
                 </button>
               </div>
+            ) : client.onboardingStage === 'proposal_accepted' ? (
+              <div className="mt-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <svg className="w-8 h-8 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-xl font-bold text-green-900">🎉 Proposal Accepted!</p>
+                      <p className="text-green-800">Thank you for partnering with BluePeak Marketing!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6">
-                <div className="flex items-center">
-                  <svg className="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-green-900">Meeting Scheduled</p>
-                    <p className="text-green-800">
-                      {new Date(client.proposal.proposalMeetingDate).toLocaleString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        timeZoneName: 'short',
-                      })}
-                    </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <svg className="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-green-900">Meeting Scheduled</p>
+                      <p className="text-green-800 text-sm">
+                        {new Date(client.proposal.proposalMeetingDate).toLocaleString('en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZoneName: 'short',
+                        })}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={handleAcceptProposal}
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
+                  >
+                    Accept Proposal
+                  </button>
                 </div>
               </div>
             )}
