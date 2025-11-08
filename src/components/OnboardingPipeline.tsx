@@ -172,7 +172,7 @@ export default function OnboardingPipeline({
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-500">
-            Step {currentStageIndex + 1} of {STAGES.length}
+            Step {client.onboardingStage === 'meeting_scheduled' ? STAGES.length : currentStageIndex + 1} of {STAGES.length}
           </div>
         </div>
       </div>
@@ -181,12 +181,20 @@ export default function OnboardingPipeline({
       <div className="mb-6">
         <div className="flex items-center">
           {STAGES.map((stage, index) => {
-            // Mark discovery as complete if proposal is generated
-            const isComplete = index < currentStageIndex || (hasGeneratedProposal && stage.stage === 'discovery_complete');
-            // If proposal generated, current step is meeting_scheduled; otherwise use actual current stage
+            // When proposal is generated at discovery_complete, mark discovery as complete
+            const isComplete =
+              index < currentStageIndex ||
+              (hasGeneratedProposal && stage.stage === 'discovery_complete') ||
+              // When meeting is scheduled, mark meeting_scheduled as complete too
+              (client.onboardingStage === 'meeting_scheduled' && index <= currentStageIndex);
+
+            // Determine which step is current
             const isCurrent = hasGeneratedProposal
-              ? stage.stage === 'meeting_scheduled'
+              ? stage.stage === 'meeting_scheduled' // Show meeting_scheduled as current when proposal generated
+              : client.onboardingStage === 'meeting_scheduled'
+              ? stage.stage === 'proposal_accepted' // Show proposal_accepted as current when waiting for acceptance
               : index === currentStageIndex;
+
             const isLast = index === STAGES.length - 1;
 
             return (
