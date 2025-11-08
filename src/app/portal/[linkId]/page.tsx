@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import DiscoveryChat from '@/components/DiscoveryChat';
 import { DiscoveryData, DiscoveryMessage } from '@/types';
 
@@ -131,8 +133,11 @@ export default function ClientPortalPage() {
         throw new Error(data.error || 'Failed to create account');
       }
 
-      // Account created successfully - redirect to client login
-      router.push('/client-portal/login?accountCreated=true');
+      // Account created successfully - now sign them in automatically
+      await signInWithEmailAndPassword(auth, clientEmail, password);
+
+      // Redirect directly to dashboard
+      router.push('/client-portal/dashboard');
     } catch (error: any) {
       console.error('Signup error:', error);
       setSignupError(error.message || 'Failed to create account. Please try again.');
