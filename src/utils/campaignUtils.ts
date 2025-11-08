@@ -134,3 +134,70 @@ export async function saveGeneratedContent(
     throw new Error('Failed to save generated content');
   }
 }
+
+// Update existing content in a campaign
+export async function updateGeneratedContent(
+  campaignId: string,
+  contentId: string,
+  updatedContent: string
+): Promise<void> {
+  try {
+    const campaignRef = doc(db, 'campaigns', campaignId);
+    const campaignDoc = await getDoc(campaignRef);
+
+    if (!campaignDoc.exists()) {
+      throw new Error('Campaign not found');
+    }
+
+    const existingContents = campaignDoc.data().contents || [];
+
+    // Find and update the specific content
+    const updatedContents = existingContents.map((content: any) => {
+      if (content.id === contentId) {
+        return {
+          ...content,
+          content: updatedContent,
+          wordCount: updatedContent.split(/\s+/).length,
+          characterCount: updatedContent.length,
+        };
+      }
+      return content;
+    });
+
+    await updateDoc(campaignRef, {
+      contents: updatedContents,
+    });
+  } catch (error) {
+    console.error('Error updating content:', error);
+    throw new Error('Failed to update content');
+  }
+}
+
+// Delete generated content from a campaign
+export async function deleteGeneratedContent(
+  campaignId: string,
+  contentId: string
+): Promise<void> {
+  try {
+    const campaignRef = doc(db, 'campaigns', campaignId);
+    const campaignDoc = await getDoc(campaignRef);
+
+    if (!campaignDoc.exists()) {
+      throw new Error('Campaign not found');
+    }
+
+    const existingContents = campaignDoc.data().contents || [];
+
+    // Filter out the content to delete
+    const updatedContents = existingContents.filter(
+      (content: any) => content.id !== contentId
+    );
+
+    await updateDoc(campaignRef, {
+      contents: updatedContents,
+    });
+  } catch (error) {
+    console.error('Error deleting content:', error);
+    throw new Error('Failed to delete content');
+  }
+}

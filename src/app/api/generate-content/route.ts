@@ -14,13 +14,14 @@ interface GenerateRequest {
   brandVoice?: string;
   brandProfile?: BrandProfile;
   contentType: ContentType;
+  notes?: string;
 }
 
 function getPromptForContentType(
   contentType: ContentType,
   data: GenerateRequest
 ): string {
-  const { clientName, industry, topic, targetAudience, brandVoice, brandProfile } = data;
+  const { clientName, industry, topic, targetAudience, brandVoice, brandProfile, notes } = data;
 
   const brandContext = brandProfile
     ? `\n\nBrand Profile:
@@ -31,13 +32,14 @@ function getPromptForContentType(
     : '';
 
   const voiceContext = brandVoice ? `\n\nBrand Voice Notes: ${brandVoice}` : '';
+  const notesContext = notes ? `\n\nSpecific Requirements for This Content:\n${notes}` : '';
 
   switch (contentType) {
     case 'blog':
       return `Write a professional blog post for ${clientName}, a ${industry} company.
 
 Topic: ${topic}
-Target Audience: ${targetAudience}${brandContext}${voiceContext}
+Target Audience: ${targetAudience}${brandContext}${voiceContext}${notesContext}
 
 Requirements:
 - 800-1200 words
@@ -47,7 +49,6 @@ Requirements:
 - Data-driven or example-based body
 - Strong conclusion with CTA
 - Professional tone matching the brand
-${brandProfile ? `- Reference brand colors in image suggestions (e.g., "Feature a hero image with ${brandProfile.colors[0]} accents")` : ''}
 
 Write the complete blog post:`;
 
@@ -55,7 +56,7 @@ Write the complete blog post:`;
       return `Write a professional LinkedIn post for ${clientName}, a ${industry} company.
 
 Topic: ${topic}
-Target Audience: ${targetAudience}${brandContext}${voiceContext}
+Target Audience: ${targetAudience}${brandContext}${voiceContext}${notesContext}
 
 Requirements:
 - Maximum 1300 characters
@@ -72,7 +73,7 @@ Write the LinkedIn post:`;
       return `Write a Twitter/X thread for ${clientName}, a ${industry} company.
 
 Topic: ${topic}
-Target Audience: ${targetAudience}${brandContext}${voiceContext}
+Target Audience: ${targetAudience}${brandContext}${voiceContext}${notesContext}
 
 Requirements:
 - 5-7 tweets forming a cohesive thread
@@ -90,7 +91,7 @@ Write the complete thread:`;
       return `Write a marketing email for ${clientName}, a ${industry} company.
 
 Topic: ${topic}
-Target Audience: ${targetAudience}${brandContext}${voiceContext}
+Target Audience: ${targetAudience}${brandContext}${voiceContext}${notesContext}
 
 Requirements:
 - Compelling subject line (max 60 chars)
@@ -113,7 +114,7 @@ Write the complete email:`;
       return `Write ad copy for ${clientName}, a ${industry} company.
 
 Topic: ${topic}
-Target Audience: ${targetAudience}${brandContext}${voiceContext}
+Target Audience: ${targetAudience}${brandContext}${voiceContext}${notesContext}
 
 Requirements:
 - Headline: Attention-grabbing, max 40 characters
@@ -131,6 +132,42 @@ LONG DESCRIPTION: [longer description]
 CTA: [call to action]
 
 Write the ad copy:`;
+
+    case 'pdf-onepager':
+      return `Generate structured content for a professional one-page PDF marketing piece for ${clientName}, a ${industry} company.
+
+Topic: ${topic}
+Target Audience: ${targetAudience}${brandContext}${voiceContext}${notesContext}
+
+You must respond with ONLY a valid JSON object (no markdown code blocks, no explanation) with this exact structure:
+{
+  "headline": "Compelling main headline (max 60 characters)",
+  "subheadline": "Supporting subheadline that expands on the headline (max 120 characters)",
+  "keyBenefits": ["Benefit 1", "Benefit 2", "Benefit 3", "Benefit 4"],
+  "stats": [
+    {"value": "stat number/percentage", "label": "what it represents"},
+    {"value": "stat number/percentage", "label": "what it represents"},
+    {"value": "stat number/percentage", "label": "what it represents"}
+  ],
+  "callToAction": "Clear, action-oriented CTA (max 80 characters)",
+  "contactInfo": {
+    "email": "contact@example.com",
+    "phone": "(555) 123-4567",
+    "website": "www.example.com"
+  }
+}
+
+Requirements:
+- Headline should grab attention and communicate core value
+- Subheadline should expand on the promise
+- Key benefits: 4 clear, specific benefits (each 10-15 words)
+- Stats: 3 impressive, relevant metrics with clear labels
+- CTA: Compelling call to action
+- Make contact info realistic for the industry
+${brandProfile ? `- Tone: ${brandProfile.tone}` : ''}
+${brandProfile ? `- Personality: ${brandProfile.personality.join(', ')}` : ''}
+
+Return ONLY the JSON object, no other text:`;
 
     default:
       return 'Generate marketing content.';
@@ -170,9 +207,35 @@ export async function POST(request: NextRequest) {
       throw new Error('No text response from Claude');
     }
 
-    const content = textContent.text;
+    let content = textContent.text;
     const wordCount = content.split(/\s+/).length;
     const characterCount = content.length;
+
+    // For PDF one-pager, parse JSON and return structured data
+    if (contentType === 'pdf-onepager') {
+      try {
+        // Remove markdown code blocks if present
+        const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+        const jsonString = jsonMatch ? jsonMatch[1] : content;
+
+        const pdfData = JSON.parse(jsonString.trim());
+
+        return NextResponse.json({
+          content: JSON.stringify(pdfData, null, 2),
+          wordCount,
+          characterCount,
+          pdfData, // Include parsed PDF data
+        });
+      } catch (parseError) {
+        console.error('Failed to parse PDF JSON:', parseError);
+        // Fallback: return as regular content
+        return NextResponse.json({
+          content,
+          wordCount,
+          characterCount,
+        });
+      }
+    }
 
     return NextResponse.json({
       content,

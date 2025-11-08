@@ -1,5 +1,5 @@
 // Content Types
-export type ContentType = 'blog' | 'linkedin' | 'twitter' | 'email' | 'ad-copy';
+export type ContentType = 'blog' | 'linkedin' | 'twitter' | 'email' | 'ad-copy' | 'pdf-onepager';
 
 export interface BrandProfile {
   colors: string[];
@@ -23,6 +23,23 @@ export interface GeneratedContent {
   wordCount?: number;
   characterCount?: number;
   generatedAt: Date;
+  pdfData?: PDFOnePagerData; // For pdf-onepager content type
+}
+
+export interface PDFOnePagerData {
+  headline: string;
+  subheadline: string;
+  keyBenefits: string[];
+  stats: {
+    value: string;
+    label: string;
+  }[];
+  callToAction: string;
+  contactInfo: {
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
 }
 
 export interface Campaign {
