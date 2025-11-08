@@ -26,6 +26,8 @@ export interface GeneratedContent {
   pdfData?: PDFOnePagerData; // For pdf-onepager content type
 }
 
+export type PDFTemplate = 'modern-minimal' | 'bold-impact' | 'corporate-professional' | 'creative-geometric';
+
 export interface PDFOnePagerData {
   headline: string;
   subheadline: string;
@@ -40,6 +42,7 @@ export interface PDFOnePagerData {
     phone?: string;
     website?: string;
   };
+  template?: PDFTemplate; // Selected template style
 }
 
 export interface Campaign {

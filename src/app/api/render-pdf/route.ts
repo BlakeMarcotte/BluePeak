@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { OnePagerTemplate } from '@/components/pdf/OnePagerTemplate';
-import { PDFOnePagerData, BrandProfile } from '@/types';
+import { BoldImpactTemplate } from '@/components/pdf/BoldImpactTemplate';
+import { CorporateProfessionalTemplate } from '@/components/pdf/CorporateProfessionalTemplate';
+import { CreativeGeometricTemplate } from '@/components/pdf/CreativeGeometricTemplate';
+import { PDFOnePagerData, BrandProfile, PDFTemplate } from '@/types';
 
 interface RenderPDFRequest {
   pdfData: PDFOnePagerData;
@@ -22,15 +25,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Render the PDF template to buffer
-    const pdfBuffer = await renderToBuffer(
-      OnePagerTemplate({
-        data: pdfData,
-        brandProfile,
-        logoUrl,
-        clientName,
-      })
-    );
+    // Select template based on pdfData.template (default to modern-minimal)
+    const template = pdfData.template || 'modern-minimal';
+    const templateProps = {
+      data: pdfData,
+      brandProfile,
+      logoUrl,
+      clientName,
+    };
+
+    let templateComponent;
+    switch (template) {
+      case 'bold-impact':
+        templateComponent = BoldImpactTemplate(templateProps);
+        break;
+      case 'corporate-professional':
+        templateComponent = CorporateProfessionalTemplate(templateProps);
+        break;
+      case 'creative-geometric':
+        templateComponent = CreativeGeometricTemplate(templateProps);
+        break;
+      case 'modern-minimal':
+      default:
+        templateComponent = OnePagerTemplate(templateProps);
+        break;
+    }
+
+    // Render the selected PDF template to buffer
+    const pdfBuffer = await renderToBuffer(templateComponent);
 
     // Return PDF as downloadable file
     const headers = new Headers();

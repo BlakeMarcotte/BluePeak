@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchCampaign, saveGeneratedContent, updateGeneratedContent, deleteGeneratedContent } from '@/utils/campaignUtils';
-import { Campaign, ContentType, GeneratedContent } from '@/types';
+import { Campaign, ContentType, GeneratedContent, PDFTemplate } from '@/types';
 
 const CONTENT_TYPES: { value: ContentType; label: string; description: string }[] = [
   { value: 'blog', label: 'Blog Post', description: '800-1200 words, SEO-optimized' },
@@ -26,6 +26,7 @@ export default function CampaignDetailPage() {
   const [generating, setGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<ContentType>('blog');
   const [notes, setNotes] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate>('modern-minimal');
 
   // Editing state
   const [editingContentId, setEditingContentId] = useState<string | null>(null);
@@ -97,13 +98,16 @@ export default function CampaignDetailPage() {
 
       const { content, wordCount, characterCount, pdfData } = await response.json();
 
+      // If PDF, add the selected template to the data
+      const finalPdfData = pdfData ? { ...pdfData, template: selectedTemplate } : undefined;
+
       const newContent: GeneratedContent = {
         type: activeTab,
         content,
         wordCount,
         characterCount,
         generatedAt: new Date(),
-        pdfData: pdfData || undefined, // Include PDF data if present
+        pdfData: finalPdfData, // Include PDF data with template if present
       };
 
       // Save to Firestore
@@ -328,6 +332,29 @@ export default function CampaignDetailPage() {
                 <p className="text-sm text-slate-600">{activeContentType?.description}</p>
               </div>
 
+              {/* Template Selector - Only for PDF One-Pager */}
+              {activeTab === 'pdf-onepager' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Template Style
+                  </label>
+                  <select
+                    value={selectedTemplate}
+                    onChange={(e) => setSelectedTemplate(e.target.value as PDFTemplate)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    disabled={generating}
+                  >
+                    <option value="modern-minimal">Modern Minimal - Clean & elegant</option>
+                    <option value="bold-impact">Bold Impact - High contrast & eye-catching</option>
+                    <option value="corporate-professional">Corporate Professional - Traditional & structured</option>
+                    <option value="creative-geometric">Creative Geometric - Modern shapes & gradients</option>
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Choose a design style that matches your brand personality
+                  </p>
+                </div>
+              )}
+
               {/* Notes Input */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -513,6 +540,18 @@ export default function CampaignDetailPage() {
                           {activeTab === 'pdf-onepager' && item.pdfData ? (
                             /* PDF Preview */
                             <div className="space-y-4">
+                              {/* Template Badge */}
+                              {item.pdfData.template && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-slate-500">Template:</span>
+                                  <span className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded">
+                                    {item.pdfData.template === 'modern-minimal' && 'Modern Minimal'}
+                                    {item.pdfData.template === 'bold-impact' && 'Bold Impact'}
+                                    {item.pdfData.template === 'corporate-professional' && 'Corporate Professional'}
+                                    {item.pdfData.template === 'creative-geometric' && 'Creative Geometric'}
+                                  </span>
+                                </div>
+                              )}
                               <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg">
                                 <h3 className="text-xl font-bold text-slate-900 mb-2">
                                   {item.pdfData.headline}
