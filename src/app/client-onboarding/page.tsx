@@ -224,9 +224,10 @@ export default function ClientOnboardingPage() {
     const client = clients.find((c) => c.id === clientId);
     if (!client) return;
 
-    await updateClient(clientId, { onboardingStage: 'proposal_sent' });
+    await updateClient(clientId, { onboardingStage: 'proposal_accepted' });
 
-    alert(`Proposal sent to ${client.email}!`);
+    // Refresh clients to show updated stage
+    fetchClients();
   };
 
   return (

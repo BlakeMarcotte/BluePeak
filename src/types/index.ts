@@ -89,10 +89,7 @@ export type OnboardingStage =
   | 'discovery_sent'    // Step 2: Discovery questionnaire sent
   | 'discovery_complete' // Step 3: Client completed discovery
   | 'meeting_scheduled' // Step 4: Proposal meeting scheduled
-  | 'proposal_generated' // Step 5: Proposal created
-  | 'proposal_sent'     // Step 6: Proposal sent to client
-  | 'proposal_accepted' // Step 7: Client accepted
-  | 'completed';        // Onboarding complete
+  | 'proposal_accepted'; // Step 5: Proposal accepted by client
 
 export interface Client {
   id: string;
