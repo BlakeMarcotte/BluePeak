@@ -1,32 +1,43 @@
 // Content Types
-export interface ContentRequest {
-  id?: string;
+export type ContentType = 'blog' | 'linkedin' | 'twitter' | 'email' | 'ad-copy';
+
+export interface BrandProfile {
+  colors: string[];
+  style: string;
+  personality: string[];
+  tone: string;
+}
+
+export interface CampaignFormData {
+  clientName: string;
+  industry: string;
   topic: string;
-  targetIndustry: string;
+  targetAudience: string;
   brandVoice?: string;
-  campaignType: 'blog' | 'social' | 'email' | 'ads' | 'full-campaign';
-  createdAt?: Date;
-  userId?: string;
+  contentTypes: ContentType[];
 }
 
 export interface GeneratedContent {
-  id?: string;
-  requestId: string;
-  contentType: 'blog' | 'linkedin' | 'twitter' | 'email' | 'ad-copy';
-  title?: string;
+  type: ContentType;
   content: string;
-  createdAt?: Date;
-  userId?: string;
+  wordCount?: number;
+  characterCount?: number;
+  generatedAt: Date;
 }
 
 export interface Campaign {
   id?: string;
-  title: string;
+  clientName: string;
+  industry: string;
   topic: string;
-  targetIndustry: string;
+  targetAudience: string;
+  brandVoice?: string;
+  logoUrl?: string;
+  screenshotUrl?: string;
+  brandProfile?: BrandProfile;
   contents: GeneratedContent[];
-  createdAt?: Date;
-  userId?: string;
+  userId: string;
+  createdAt: Date;
 }
 
 // User Types
