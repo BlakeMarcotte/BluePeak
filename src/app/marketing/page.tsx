@@ -43,10 +43,7 @@ export default function MarketingPage() {
         (client: Client) =>
           client.onboardingStage === 'discovery_complete' ||
           client.onboardingStage === 'meeting_scheduled' ||
-          client.onboardingStage === 'proposal_generated' ||
-          client.onboardingStage === 'proposal_sent' ||
-          client.onboardingStage === 'proposal_accepted' ||
-          client.onboardingStage === 'completed'
+          client.onboardingStage === 'proposal_accepted'
       );
 
       setClients(eligibleClients);

@@ -218,7 +218,7 @@ export default function ClientDashboardPage() {
             {/* Action Buttons */}
             <div className="flex gap-3 mb-6">
               <a
-                href={client.proposal.pdfUrl}
+                href={client.proposal!.pdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors inline-flex items-center"
@@ -230,7 +230,7 @@ export default function ClientDashboardPage() {
                 View PDF
               </a>
               <button
-                onClick={() => downloadPDF(client.proposal.pdfUrl, `${client.company}_Proposal.pdf`)}
+                onClick={() => downloadPDF(client.proposal!.pdfUrl, `${client.company}_Proposal.pdf`)}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,7 +241,7 @@ export default function ClientDashboardPage() {
             </div>
 
             {/* Meeting CTA */}
-            {!client.proposal.proposalMeetingDate ? (
+            {!client.proposal!.proposalMeetingDate ? (
               <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
                 <h4 className="text-lg font-semibold text-purple-900 mb-2">Next Step: Schedule Your Discussion</h4>
                 <p className="text-purple-800 mb-4">
@@ -286,7 +286,7 @@ export default function ClientDashboardPage() {
                     <div>
                       <p className="font-semibold text-green-900">Meeting Scheduled</p>
                       <p className="text-green-800 text-sm">
-                        {new Date(client.proposal.proposalMeetingDate).toLocaleString('en-US', {
+                        {new Date(client.proposal!.proposalMeetingDate!).toLocaleString('en-US', {
                           weekday: 'long',
                           month: 'long',
                           day: 'numeric',

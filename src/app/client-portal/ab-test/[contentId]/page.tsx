@@ -145,6 +145,20 @@ export default function ABTestPage() {
   const generateVariant = async (regenerate: boolean = false) => {
     if (!client || !originalContent) return;
 
+    // Check if voting exists and warn user about reset
+    if (regenerate && publicVoteId && ((originalContent.votes || 0) + (variantContent?.votes || 0) > 0)) {
+      const totalVotes = (originalContent.votes || 0) + (variantContent?.votes || 0);
+      const confirmReset = window.confirm(
+        `⚠️ Warning: Regenerating the variant will reset all voting data.\n\n` +
+        `You currently have ${totalVotes} vote${totalVotes === 1 ? '' : 's'}.\n\n` +
+        `Are you sure you want to regenerate and lose this voting data?`
+      );
+
+      if (!confirmReset) {
+        return; // User cancelled
+      }
+    }
+
     setGeneratingVariant(true);
 
     try {
@@ -185,16 +199,32 @@ export default function ABTestPage() {
         published: true,
         variantOfId: originalContent.id,
         variantLabel: 'Variant B',
+        // Reset voting data when regenerating
+        publicVoteId: undefined,
+        votes: 0,
       };
 
       // Update or add variant in database
       let updatedContent = client.marketingContent || [];
 
       if (regenerate && variantContent) {
-        // Replace existing variant
-        updatedContent = updatedContent.map(c =>
-          c.id === variantContent.id ? newVariant : c
-        );
+        // Replace existing variant and reset voting on original too
+        updatedContent = updatedContent.map(c => {
+          if (c.id === variantContent.id) {
+            return newVariant;
+          }
+          // Reset voting data on original when regenerating variant
+          if (c.id === originalContent.id && publicVoteId) {
+            return {
+              ...c,
+              publicVoteId: undefined,
+              votes: 0,
+            };
+          }
+          return c;
+        });
+        // Reset local state
+        setPublicVoteId(null);
       } else {
         // Add "Original" label to the original content if it doesn't have one
         updatedContent = updatedContent.map(c => {
@@ -450,6 +480,102 @@ export default function ABTestPage() {
     await navigator.clipboard.writeText(voteUrl);
     setShowLinkCopied(true);
     setTimeout(() => setShowLinkCopied(false), 3000);
+  };
+
+  const promoteVariantToOriginal = async () => {
+    if (!client || !originalContent || !variantContent) return;
+
+    // Warn if voting data exists
+    if (publicVoteId && ((originalContent.votes || 0) + (variantContent.votes || 0) > 0)) {
+      const totalVotes = (originalContent.votes || 0) + (variantContent.votes || 0);
+      const confirmPromote = window.confirm(
+        `⚠️ Warning: Making the variant the new original will reset all voting data.\n\n` +
+        `You currently have ${totalVotes} vote${totalVotes === 1 ? '' : 's'}.\n\n` +
+        `The current variant will become the new original, and the old original will become a variant.\n\n` +
+        `Are you sure you want to continue?`
+      );
+
+      if (!confirmPromote) {
+        return; // User cancelled
+      }
+    } else {
+      const confirmPromote = window.confirm(
+        `Are you sure you want to make this variant the new original?\n\n` +
+        `The current variant will become the new original, and the old original will become a variant.`
+      );
+
+      if (!confirmPromote) {
+        return;
+      }
+    }
+
+    setGeneratingVariant(true);
+
+    try {
+      let updatedContent = client.marketingContent || [];
+
+      // Swap the original and variant
+      updatedContent = updatedContent.map(c => {
+        if (c.id === originalContent.id) {
+          // Old original becomes a variant
+          return {
+            ...c,
+            variantOfId: variantContent.id,
+            variantLabel: 'Variant A',
+            publicVoteId: undefined,
+            votes: 0,
+          };
+        }
+        if (c.id === variantContent.id) {
+          // Old variant becomes the new original
+          return {
+            ...c,
+            variantOfId: undefined,
+            variantLabel: 'Original',
+            publicVoteId: undefined,
+            votes: 0,
+          };
+        }
+        return c;
+      });
+
+      // Save to database
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          marketingContent: updatedContent,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to promote variant');
+
+      // Reload client data and redirect to the new original's A/B test page
+      const profileResponse = await fetch(`/api/client-auth/profile?uid=${auth.currentUser?.uid}`);
+      if (profileResponse.ok) {
+        const data = await profileResponse.json();
+        const clientData: Client = {
+          ...data.client,
+          createdAt: new Date(data.client.createdAt),
+          updatedAt: new Date(data.client.updatedAt),
+          accountCreatedAt: data.client.accountCreatedAt ? new Date(data.client.accountCreatedAt) : undefined,
+        };
+        setClient(clientData);
+      }
+
+      // Reset voting state
+      setPublicVoteId(null);
+
+      // Redirect to the new original's A/B test page
+      alert('✅ Variant successfully promoted to original!');
+      router.push(`/client-portal/ab-test/${variantContent.id}`);
+    } catch (error) {
+      console.error('Error promoting variant:', error);
+      alert('Failed to promote variant. Please try again.');
+    } finally {
+      setGeneratingVariant(false);
+    }
   };
 
   if (loading) {
@@ -734,7 +860,20 @@ export default function ABTestPage() {
 
           {/* Variant Version */}
           <div>
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Version B (Variant)</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-slate-900">Version B (Variant)</h2>
+              {variantContent && (
+                <button
+                  onClick={promoteVariantToOriginal}
+                  disabled={generatingVariant}
+                  className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  title="Make this variant the new original"
+                >
+                  <span>⭐</span>
+                  Make This Original
+                </button>
+              )}
+            </div>
             {variantContent ? (
               renderContent(variantContent, 'Variant B', variantPdfUrl, loadingVariantPdf)
             ) : (

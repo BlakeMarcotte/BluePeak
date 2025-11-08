@@ -11,10 +11,7 @@ const STAGE_LABELS: Record<OnboardingStage, string> = {
   discovery_sent: 'Discovery Sent',
   discovery_complete: 'Discovery Complete',
   meeting_scheduled: 'Meeting Scheduled',
-  proposal_generated: 'Proposal Ready',
-  proposal_sent: 'Proposal Sent',
   proposal_accepted: 'Accepted',
-  completed: 'Completed',
 };
 
 const STAGE_COLORS: Record<OnboardingStage, string> = {
@@ -22,10 +19,7 @@ const STAGE_COLORS: Record<OnboardingStage, string> = {
   discovery_sent: 'bg-blue-100 text-blue-800',
   discovery_complete: 'bg-cyan-100 text-cyan-800',
   meeting_scheduled: 'bg-purple-100 text-purple-800',
-  proposal_generated: 'bg-indigo-100 text-indigo-800',
-  proposal_sent: 'bg-yellow-100 text-yellow-800',
   proposal_accepted: 'bg-green-100 text-green-800',
-  completed: 'bg-green-200 text-green-900',
 };
 
 export default function ClientsPage() {
@@ -186,9 +180,9 @@ export default function ClientsPage() {
               </p>
             </div>
             <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600">Proposals Sent</p>
+              <p className="text-sm text-gray-600">Proposals Accepted</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {clients.filter((c) => c.onboardingStage === 'proposal_sent').length}
+                {clients.filter((c) => c.onboardingStage === 'proposal_accepted').length}
               </p>
             </div>
           </div>
