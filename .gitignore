@@ -39,3 +39,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+bluepeak-23105-firebase-adminsdk-fbsvc-b15ea453b4.json
