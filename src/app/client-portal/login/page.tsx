@@ -47,6 +47,36 @@ function LoginForm() {
       }
 
       // Valid client account, proceed to dashboard
+      const clientData = await checkResponse.json();
+
+      // Check if User record exists, create if missing (fallback for legacy accounts)
+      const userCheckResponse = await fetch(`/api/users?uid=${user.uid}`);
+      if (!userCheckResponse.ok) {
+        console.log('User record not found, creating one...');
+        // Create User record for legacy client account
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: user.uid,
+            email: user.email,
+            displayName: user.displayName || clientData.client.name || 'Client',
+            role: 'client',
+            clientId: clientData.client.id,
+          }),
+        });
+      } else {
+        // Update lastLoginAt for existing user
+        await fetch('/api/users', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: user.uid,
+            lastLoginAt: new Date().toISOString(),
+          }),
+        });
+      }
+
       router.push('/client-portal/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
