@@ -5,27 +5,52 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import CampaignForm from '@/components/CampaignForm';
 import { CampaignFormData } from '@/types';
+import { uploadToStorage } from '@/utils/uploadToStorage';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function MarketingPage() {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleFormSubmit = async (
     formData: CampaignFormData,
     logo: File | null,
     screenshot: File | null
   ) => {
+    if (!user) {
+      alert('You must be logged in');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      console.log('Form submitted:', formData);
-      console.log('Logo:', logo?.name);
-      console.log('Screenshot:', screenshot?.name);
+      let logoUrl: string | undefined;
+      let screenshotUrl: string | undefined;
 
-      // TODO: Handle file uploads and API calls in next phase
-      alert('Form submitted! Next phase: upload assets and generate content.');
+      // Upload logo if provided
+      if (logo) {
+        console.log('Uploading logo...');
+        logoUrl = await uploadToStorage(logo, `campaigns/${user.uid}/logos`);
+        console.log('Logo uploaded:', logoUrl);
+      }
+
+      // Upload screenshot if provided
+      if (screenshot) {
+        console.log('Uploading screenshot...');
+        screenshotUrl = await uploadToStorage(screenshot, `campaigns/${user.uid}/screenshots`);
+        console.log('Screenshot uploaded:', screenshotUrl);
+      }
+
+      console.log('Form data:', formData);
+      console.log('Logo URL:', logoUrl);
+      console.log('Screenshot URL:', screenshotUrl);
+
+      // TODO: Next phase - analyze brand and generate content
+      alert('Files uploaded successfully! Next: brand analysis and content generation.');
     } catch (error) {
       console.error('Error:', error);
-      alert('Error submitting form');
+      alert('Error uploading files. Check console for details.');
     } finally {
       setLoading(false);
     }
