@@ -23,6 +23,34 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
   const [tone, setTone] = useState<'formal' | 'casual' | 'detailed'>('casual');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showAutoFillBanner, setShowAutoFillBanner] = useState(false);
+  const [autoFilledCount, setAutoFilledCount] = useState(0);
+
+  // Content type icons and colors
+  const contentTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
+    'blog': { icon: '📝', color: 'bg-blue-100 text-blue-700', label: 'Blog Posts' },
+    'linkedin': { icon: '💼', color: 'bg-indigo-100 text-indigo-700', label: 'LinkedIn' },
+    'twitter': { icon: '🐦', color: 'bg-sky-100 text-sky-700', label: 'Twitter' },
+    'email': { icon: '📧', color: 'bg-purple-100 text-purple-700', label: 'Email' },
+    'ad-copy': { icon: '📢', color: 'bg-orange-100 text-orange-700', label: 'Ad Copy' },
+    'pdf-onepager': { icon: '📄', color: 'bg-green-100 text-green-700', label: 'PDF' },
+  };
+
+  // Calculate form completion percentage
+  const calculateProgress = () => {
+    let filledFields = 0;
+    let totalFields = 7; // clientName, reportPeriod, tasks, metrics, deliverables, highlights, blockers
+
+    if (formData.clientName) filledFields++;
+    if (formData.reportPeriod) filledFields++;
+    if (formData.completedTasks.some(t => t.trim())) filledFields++;
+    if (formData.metrics.some(m => m.label && m.value)) filledFields++;
+    if (formData.upcomingDeliverables.some(d => d.trim())) filledFields++;
+    if (formData.highlights) filledFields++;
+    if (formData.blockers) filledFields++;
+
+    return Math.round((filledFields / totalFields) * 100);
+  };
 
   // Auto-populate form when client is selected
   useEffect(() => {
@@ -81,6 +109,14 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
       blockers: '',
       highlights: marketingContent.length > 0 ? `Successfully generated ${marketingContent.length} high-quality marketing materials tailored to ${selectedClient.company}'s brand and audience` : '',
     });
+
+    // Show auto-fill banner with animation
+    if (marketingContent.length > 0) {
+      const fieldsCount = tasks.length + suggestedMetrics.length + suggestedDeliverables.length + 2; // +2 for clientName and highlights
+      setAutoFilledCount(fieldsCount);
+      setShowAutoFillBanner(true);
+      setTimeout(() => setShowAutoFillBanner(false), 5000); // Hide after 5 seconds
+    }
   }, [selectedClientId, clients]);
 
   const handleTaskChange = (index: number, value: string) => {
@@ -172,13 +208,47 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
     alert('Report copied to clipboard!');
   };
 
+  const selectedClient = clients.find(c => c.id === selectedClientId);
+  const contentByType = selectedClient?.marketingContent?.reduce((acc, content) => {
+    acc[content.type] = (acc[content.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  const progress = calculateProgress();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Input Form */}
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Progress Report Generator
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Progress Report Generator
+          </h2>
+          {/* Progress Indicator */}
+          {progress > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-700">{progress}%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Auto-Fill Banner */}
+        {showAutoFillBanner && (
+          <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 animate-pulse">
+            <div className="flex items-center gap-2 text-green-800">
+              <span className="text-xl">✨</span>
+              <span className="font-medium text-sm">
+                Auto-populated {autoFilledCount} fields from marketing content!
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
           {/* Client Selector */}
@@ -199,11 +269,33 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
                   </option>
                 ))}
               </select>
-              {selectedClientId && (
-                <p className="text-xs text-purple-600 mt-1">
-                  ✨ Tasks auto-populated from marketing content!
-                </p>
-              )}
+            </div>
+          )}
+
+          {/* Content Summary Card */}
+          {selectedClient && selectedClient.marketingContent && selectedClient.marketingContent.length > 0 && (
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Content Created</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(contentByType).map(([type, count]) => {
+                  const config = contentTypeConfig[type];
+                  return (
+                    <div key={type} className={`${config.color} rounded-lg px-3 py-2 flex items-center gap-2`}>
+                      <span className="text-lg">{config.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate">{config.label}</div>
+                        <div className="text-lg font-bold">{count}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-3 pt-3 border-t border-purple-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-gray-700">Total Content</span>
+                  <span className="font-bold text-purple-600">{selectedClient.marketingContent.length} pieces</span>
+                </div>
+              </div>
             </div>
           )}
 
