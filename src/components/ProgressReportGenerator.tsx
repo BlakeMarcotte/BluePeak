@@ -208,6 +208,86 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
     alert('Report copied to clipboard!');
   };
 
+  // Calculate report metadata
+  const getReportMetadata = () => {
+    if (!generatedReport) return { wordCount: 0, readingTime: 0, suggestedSubject: '' };
+
+    const wordCount = generatedReport.trim().split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+    const suggestedSubject = `Progress Update - ${formData.clientName} - ${formData.reportPeriod}`;
+
+    return { wordCount, readingTime, suggestedSubject };
+  };
+
+  // Format the report for email-style display
+  const formatReport = (text: string) => {
+    // Split into lines
+    const lines = text.split('\n');
+
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
+
+      // Skip empty lines
+      if (!trimmedLine) {
+        return <div key={index} className="h-4" />;
+      }
+
+      // Check for greeting (starts with Hi, Hello, Dear, etc.)
+      if (trimmedLine.match(/^(Hi|Hello|Dear|Greetings)/i) && index < 3) {
+        return (
+          <p key={index} className="text-lg font-medium text-gray-900 mb-4">
+            {trimmedLine}
+          </p>
+        );
+      }
+
+      // Check for headings (all caps or ends with colon)
+      if (trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 5 && trimmedLine.length < 50) {
+        return (
+          <h3 key={index} className="text-base font-bold text-gray-900 mt-6 mb-3 uppercase tracking-wide">
+            {trimmedLine}
+          </h3>
+        );
+      }
+
+      // Check for section headers (ends with colon)
+      if (trimmedLine.endsWith(':') && trimmedLine.length < 60) {
+        return (
+          <h4 key={index} className="text-base font-semibold text-gray-900 mt-4 mb-2">
+            {trimmedLine}
+          </h4>
+        );
+      }
+
+      // Check for bullet points
+      if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•') || trimmedLine.match(/^\d+\./)) {
+        return (
+          <li key={index} className="text-gray-700 leading-relaxed ml-4 mb-1">
+            {trimmedLine.replace(/^[-•]\s*/, '').replace(/^\d+\.\s*/, '')}
+          </li>
+        );
+      }
+
+      // Check for sign-off (Best, Regards, Sincerely, etc.)
+      if (trimmedLine.match(/^(Best|Regards|Sincerely|Warm regards|Thank you|Cheers)/i) && index > lines.length - 5) {
+        return (
+          <p key={index} className="text-gray-900 mt-6 mb-1 font-medium">
+            {trimmedLine}
+          </p>
+        );
+      }
+
+      // Regular paragraph
+      return (
+        <p key={index} className="text-gray-700 leading-relaxed mb-3">
+          {trimmedLine}
+        </p>
+      );
+    });
+  };
+
+  const metadata = getReportMetadata();
+
   const selectedClient = clients.find(c => c.id === selectedClientId);
   const contentByType = selectedClient?.marketingContent?.reduce((acc, content) => {
     acc[content.type] = (acc[content.type] || 0) + 1;
@@ -547,10 +627,53 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
         )}
 
         {generatedReport && (
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-gray-800">
-                {generatedReport}
+          <div className="space-y-4">
+            {/* Report Metadata */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="grid grid-cols-3 gap-4 mb-3">
+                <div>
+                  <div className="text-xs font-medium text-purple-600 mb-1">Word Count</div>
+                  <div className="text-lg font-bold text-purple-900">{metadata.wordCount}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-purple-600 mb-1">Reading Time</div>
+                  <div className="text-lg font-bold text-purple-900">{metadata.readingTime} min</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-purple-600 mb-1">Tone</div>
+                  <div className="text-lg font-bold text-purple-900 capitalize">{tone}</div>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-purple-200">
+                <div className="text-xs font-medium text-purple-600 mb-1">Suggested Email Subject</div>
+                <div className="text-sm font-medium text-purple-900 break-words">{metadata.suggestedSubject}</div>
+              </div>
+            </div>
+
+            {/* Email Preview */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+              {/* Email Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4">
+                <div className="text-xs font-medium opacity-80 mb-1">EMAIL PREVIEW</div>
+                <div className="font-semibold">{metadata.suggestedSubject}</div>
+              </div>
+
+              {/* Email Body */}
+              <div className="p-8 bg-white" style={{ fontFamily: 'Georgia, serif' }}>
+                <div className="max-w-2xl">
+                  {formatReport(generatedReport)}
+                </div>
+              </div>
+
+              {/* Email Footer */}
+              <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div>BluePeak Marketing • Professional Progress Report</div>
+                  <div className="flex items-center gap-4">
+                    <span>{metadata.wordCount} words</span>
+                    <span>{metadata.readingTime} min read</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
