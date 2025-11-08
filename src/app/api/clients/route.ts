@@ -21,12 +21,29 @@ export async function GET(request: NextRequest) {
     const clients: Client[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
+
+      // Helper function to convert various date formats to Date objects
+      const convertToDate = (dateValue: any): Date | undefined => {
+        if (!dateValue) return undefined;
+        if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+          return dateValue.toDate(); // Firestore Timestamp
+        }
+        if (dateValue instanceof Date) {
+          return dateValue;
+        }
+        if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+          return new Date(dateValue);
+        }
+        return undefined;
+      };
+
       clients.push({
         id: doc.id,
         ...data,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-        meetingDate: data.meetingDate?.toDate(),
+        createdAt: convertToDate(data.createdAt) || new Date(),
+        updatedAt: convertToDate(data.updatedAt) || new Date(),
+        meetingDate: convertToDate(data.meetingDate),
+        accountCreatedAt: convertToDate(data.accountCreatedAt),
       } as Client);
     });
 
