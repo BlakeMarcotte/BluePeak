@@ -143,20 +143,20 @@ export interface ClientProposal {
   id?: string;
   clientId?: string;
   clientName: string;
-  discoveryData: DiscoveryData;
 
-  // Generated content from Claude
-  executiveSummary: string;
-  scopeOfWork: string;
-  timeline: string;
-  pricing: string;
-  deliverables: string[];
-
-  // PDF storage
-  pdfUrl?: string; // Firebase Storage URL for the generated PDF
+  // PDF storage (primary data source)
+  pdfUrl: string; // Firebase Storage URL for the generated PDF - permanent link
 
   generatedAt: Date;
   proposalMeetingDate?: Date; // When client scheduled the meeting to discuss
+
+  // Legacy fields (deprecated - PDF is source of truth)
+  discoveryData?: DiscoveryData;
+  executiveSummary?: string;
+  scopeOfWork?: string;
+  timeline?: string;
+  pricing?: string;
+  deliverables?: string[];
 }
 
 export interface ProgressReportData {

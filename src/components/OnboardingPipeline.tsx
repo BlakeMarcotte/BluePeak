@@ -9,6 +9,24 @@ interface OnboardingPipelineProps {
   onSendProposal: (clientId: string) => void;
 }
 
+// Helper function to download PDF from Firebase Storage URL
+const downloadPDF = (url: string, filename: string) => {
+  // Add response-content-disposition parameter to force download
+  const downloadUrl = new URL(url);
+  downloadUrl.searchParams.set('response-content-disposition', `attachment; filename="${filename}"`);
+
+  // Create a temporary anchor element to trigger download
+  const link = document.createElement('a');
+  link.href = downloadUrl.toString();
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+
+  // Trigger download
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 const STAGES: { stage: OnboardingStage; label: string; step: number }[] = [
   { stage: 'created', label: 'Client Added', step: 1 },
   { stage: 'discovery_sent', label: 'Discovery Sent', step: 2 },
@@ -26,6 +44,9 @@ export default function OnboardingPipeline({
   onSendProposal,
 }: OnboardingPipelineProps) {
   const currentStageIndex = STAGES.findIndex((s) => s.stage === client.onboardingStage);
+
+  // If proposal has been generated but still at discovery_complete, treat discovery as complete
+  const hasGeneratedProposal = client.proposal && client.onboardingStage === 'discovery_complete';
 
   const getActionButton = () => {
     switch (client.onboardingStage) {
@@ -67,16 +88,15 @@ export default function OnboardingPipeline({
                 Proposal generated - waiting for client to schedule meeting
               </div>
               {client.proposal.pdfUrl && (
-                <a
-                  href={client.proposal.pdfUrl}
-                  download={`${client.company}_Proposal.pdf`}
+                <button
+                  onClick={() => downloadPDF(client.proposal!.pdfUrl, `${client.company}_Proposal.pdf`)}
                   className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   Download PDF
-                </a>
+                </button>
               )}
             </div>
           );
@@ -104,12 +124,25 @@ export default function OnboardingPipeline({
         );
       case 'proposal_generated':
         return (
-          <button
-            onClick={() => onSendProposal(client.id)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-          >
-            Send Proposal
-          </button>
+          <div className="flex items-center gap-3">
+            {client.proposal?.pdfUrl && (
+              <button
+                onClick={() => downloadPDF(client.proposal!.pdfUrl, `${client.company}_Proposal.pdf`)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </button>
+            )}
+            <button
+              onClick={() => onSendProposal(client.id)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+            >
+              Send Proposal
+            </button>
+          </div>
         );
       case 'proposal_sent':
         return (
@@ -163,8 +196,12 @@ export default function OnboardingPipeline({
       <div className="mb-6">
         <div className="flex items-center">
           {STAGES.slice(0, -1).map((stage, index) => {
-            const isComplete = index < currentStageIndex;
-            const isCurrent = index === currentStageIndex;
+            // Mark discovery as complete if proposal is generated
+            const isComplete = index < currentStageIndex || (hasGeneratedProposal && stage.stage === 'discovery_complete');
+            // If proposal generated, current step is meeting_scheduled; otherwise use actual current stage
+            const isCurrent = hasGeneratedProposal
+              ? stage.stage === 'meeting_scheduled'
+              : index === currentStageIndex;
             const isLast = index === STAGES.length - 2;
 
             return (

@@ -7,6 +7,8 @@ import AddClientModal from '@/components/AddClientModal';
 import OnboardingPipeline from '@/components/OnboardingPipeline';
 import ProgressReportGenerator from '@/components/ProgressReportGenerator';
 import { Client } from '@/types';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type TabType = 'pipeline' | 'reports';
 
@@ -134,6 +136,7 @@ export default function ClientOnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientName: client.company || client.name,
+          logoUrl: client.logoUrl, // Include client logo
           executiveSummary: proposalData.executiveSummary,
           scopeOfWork: proposalData.scopeOfWork,
           timeline: proposalData.timeline,
@@ -144,29 +147,64 @@ export default function ClientOnboardingPage() {
 
       if (!pdfResponse.ok) throw new Error('Failed to generate PDF');
 
+      const { pdfData, filename } = await pdfResponse.json();
+
+      // Step 3: Upload PDF to Firebase Storage
       setGenerationProgress(85);
+      setGenerationStatus('Uploading PDF to cloud storage...');
+
+      // Convert base64 data URI to blob
+      const base64Data = pdfData.split(',')[1];
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))],
+        { type: 'application/pdf' }
+      );
+
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, `proposals/${clientId}/${filename}`);
+      await uploadBytes(storageRef, pdfBlob);
+
+      // Get permanent download URL
+      const pdfUrl = await getDownloadURL(storageRef);
+
+      setGenerationProgress(95);
       setGenerationStatus('Saving proposal to client record...');
 
-      const { pdfData } = await pdfResponse.json();
-
-      // Create the proposal object
+      // Create simplified proposal object with just the PDF URL
       const proposal = {
+        pdfUrl, // Permanent Firebase Storage URL
         clientName: client.company || client.name,
-        discoveryData: client.discoveryData || {},
-        executiveSummary: proposalData.executiveSummary,
-        scopeOfWork: proposalData.scopeOfWork,
-        timeline: proposalData.timeline,
-        pricing: proposalData.pricing,
-        deliverables: proposalData.deliverables,
-        pdfUrl: pdfData, // Store the data URI directly
-        generatedAt: new Date(),
+        generatedAt: new Date().toISOString(),
       };
 
-      // Update the client with the proposal (keep stage at discovery_complete)
-      await updateClient(clientId, {
-        proposal,
-        // Don't change onboardingStage - client will schedule meeting first
+      // Update client with proposal (keep at discovery_complete, don't auto-advance)
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: clientId,
+          proposal,
+          // Don't change stage - let it stay at discovery_complete until client schedules meeting
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to save proposal to client');
+      }
+
+      // Update local state
+      const proposalWithDate = {
+        ...proposal,
+        generatedAt: new Date(proposal.generatedAt),
+      };
+
+      setClients(
+        clients.map((c) =>
+          c.id === clientId
+            ? { ...c, proposal: proposalWithDate }
+            : c
+        )
+      );
 
       setGenerationProgress(100);
       setGenerationStatus('Proposal generated successfully!');
@@ -174,7 +212,6 @@ export default function ClientOnboardingPage() {
       // Wait a moment to show 100% before closing
       setTimeout(() => {
         setIsGeneratingProposal(false);
-        alert('Proposal generated successfully! Client can now view and download the PDF from their dashboard.');
       }, 1000);
     } catch (error) {
       console.error('Error generating proposal:', error);

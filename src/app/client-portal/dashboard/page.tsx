@@ -8,13 +8,30 @@ import { Client } from '@/types';
 import ClientPortalNav from '@/components/ClientPortalNav';
 import MeetingScheduler from '@/components/MeetingScheduler';
 
+// Helper function to download PDF from Firebase Storage URL
+const downloadPDF = (url: string, filename: string) => {
+  // Add response-content-disposition parameter to force download
+  const downloadUrl = new URL(url);
+  downloadUrl.searchParams.set('response-content-disposition', `attachment; filename="${filename}"`);
+
+  // Create a temporary anchor element to trigger download
+  const link = document.createElement('a');
+  link.href = downloadUrl.toString();
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+
+  // Trigger download
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 export default function ClientDashboardPage() {
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showScheduler, setShowScheduler] = useState(false);
-  const [showProposal, setShowProposal] = useState(false);
 
   useEffect(() => {
     // Check auth state
@@ -156,79 +173,32 @@ export default function ClientDashboardPage() {
         {/* Proposal Section */}
         {client?.proposal && !showScheduler ? (
           <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold text-gray-900">Your Marketing Proposal</h3>
-              {!showProposal && (
-                <button
-                  onClick={() => setShowProposal(true)}
-                  className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                >
-                  View Full Proposal
-                </button>
-              )}
-              {showProposal && (
-                <button
-                  onClick={() => setShowProposal(false)}
-                  className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-                >
-                  Hide Proposal
-                </button>
-              )}
+            <h3 className="text-2xl font-semibold text-gray-900 mb-6">Your Marketing Proposal</h3>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mb-6">
+              <a
+                href={client.proposal.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                View PDF
+              </a>
+              <button
+                onClick={() => downloadPDF(client.proposal.pdfUrl, `${client.company}_Proposal.pdf`)}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </button>
             </div>
-
-            {showProposal && (
-              <div className="prose max-w-none space-y-6">
-                {/* Executive Summary */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Executive Summary</h4>
-                  <p className="text-gray-700 whitespace-pre-wrap">{client.proposal.executiveSummary}</p>
-                </div>
-
-                {/* Scope of Work */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Scope of Work</h4>
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.scopeOfWork }} />
-                </div>
-
-                {/* Timeline */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Timeline</h4>
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.timeline }} />
-                </div>
-
-                {/* Pricing */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Investment</h4>
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.pricing }} />
-                </div>
-
-                {/* Deliverables */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Deliverables</h4>
-                  <ul className="list-disc list-inside text-gray-700 space-y-1">
-                    {client.proposal.deliverables.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {/* Download Button */}
-            {client.proposal.pdfUrl && (
-              <div className="mt-6 flex gap-3">
-                <a
-                  href={client.proposal.pdfUrl}
-                  download={`${client.company}_Proposal.pdf`}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Download PDF
-                </a>
-              </div>
-            )}
 
             {/* Meeting CTA */}
             {!client.proposal.proposalMeetingDate ? (
