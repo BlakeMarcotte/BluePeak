@@ -15,6 +15,9 @@ export default function ClientOnboardingPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
 
   // Fetch clients on mount - filter for active onboarding only
   useEffect(() => {
@@ -98,10 +101,15 @@ export default function ClientOnboardingPage() {
     }
 
     try {
-      // Show loading state
-      alert('Generating proposal... This may take a moment.');
+      // Show loading modal
+      setIsGeneratingProposal(true);
+      setGenerationProgress(0);
+      setGenerationStatus('Initializing proposal generation...');
 
       // Step 1: Generate proposal text with Claude
+      setGenerationProgress(10);
+      setGenerationStatus('Analyzing discovery conversation with AI...');
+
       const textResponse = await fetch('/api/generate-proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -112,9 +120,15 @@ export default function ClientOnboardingPage() {
 
       if (!textResponse.ok) throw new Error('Failed to generate proposal text');
 
+      setGenerationProgress(50);
+      setGenerationStatus('Proposal content generated! Creating PDF document...');
+
       const proposalData = await textResponse.json();
 
       // Step 2: Generate PDF from the proposal data
+      setGenerationProgress(60);
+      setGenerationStatus('Formatting proposal into professional PDF...');
+
       const pdfResponse = await fetch('/api/generate-proposal-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,6 +143,9 @@ export default function ClientOnboardingPage() {
       });
 
       if (!pdfResponse.ok) throw new Error('Failed to generate PDF');
+
+      setGenerationProgress(85);
+      setGenerationStatus('Saving proposal to client record...');
 
       const { pdfData } = await pdfResponse.json();
 
@@ -151,9 +168,17 @@ export default function ClientOnboardingPage() {
         // Don't change onboardingStage - client will schedule meeting first
       });
 
-      alert('Proposal generated successfully! Client can now view and download the PDF from their dashboard.');
+      setGenerationProgress(100);
+      setGenerationStatus('Proposal generated successfully!');
+
+      // Wait a moment to show 100% before closing
+      setTimeout(() => {
+        setIsGeneratingProposal(false);
+        alert('Proposal generated successfully! Client can now view and download the PDF from their dashboard.');
+      }, 1000);
     } catch (error) {
       console.error('Error generating proposal:', error);
+      setIsGeneratingProposal(false);
       alert('Failed to generate proposal. Please try again.');
     }
   };
@@ -350,6 +375,73 @@ export default function ClientOnboardingPage() {
         onClientAdded={handleClientAdded}
         isQuickAdd
       />
+
+      {/* Proposal Generation Loading Modal */}
+      {isGeneratingProposal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black/50 transition-opacity" />
+
+            {/* Modal */}
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-8 z-10">
+              <div className="text-center">
+                {/* Icon */}
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 mb-4">
+                  <svg
+                    className="h-8 w-8 text-purple-600 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Generating Proposal
+                </h3>
+
+                {/* Status */}
+                <p className="text-sm text-gray-600 mb-6">
+                  {generationStatus}
+                </p>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${generationProgress}%` }}
+                  ></div>
+                </div>
+
+                {/* Percentage */}
+                <p className="text-sm font-medium text-gray-700">
+                  {generationProgress}%
+                </p>
+
+                {/* Info */}
+                <p className="text-xs text-gray-500 mt-4">
+                  This may take 30-60 seconds. Please don't close this window.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 }
