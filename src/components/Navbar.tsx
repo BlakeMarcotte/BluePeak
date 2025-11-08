@@ -21,7 +21,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/marketing/campaigns', label: 'Marketing' },
+    { href: '/marketing', label: 'Marketing' },
     { href: '/client-onboarding', label: 'Client Onboarding' },
     { href: '/clients', label: 'Clients' },
   ];

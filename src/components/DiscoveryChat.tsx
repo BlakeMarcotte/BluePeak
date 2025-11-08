@@ -35,9 +35,40 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   }, [messages]);
 
   const extractDiscoveryData = (msgs: DiscoveryMessage[]): DiscoveryData => {
-    // No extraction needed - we'll use the full conversation history
-    // Claude can extract what it needs when generating proposals
-    return {};
+    // Extract structured data by finding assistant questions and the following user answers
+    const data: DiscoveryData = {};
+
+    for (let i = 0; i < msgs.length - 1; i++) {
+      const currentMsg = msgs[i];
+      const nextMsg = msgs[i + 1];
+
+      // Only process if current is assistant question and next is user answer
+      if (currentMsg.role === 'assistant' && nextMsg.role === 'user') {
+        const question = currentMsg.content.toLowerCase();
+        const answer = nextMsg.content.trim();
+
+        // Extract based on question keywords
+        if (question.includes('marketing goal') || question.includes('main goal')) {
+          data.businessGoals = answer;
+        } else if (question.includes('target audience') || question.includes('ideal customer')) {
+          data.targetAudience = answer;
+        } else if (question.includes('services') || question.includes('interested in')) {
+          data.servicesNeeded = [answer];
+        } else if (question.includes('company name') || question.includes('business name')) {
+          data.companyName = answer;
+        } else if (question.includes('industry') || question.includes('sector')) {
+          data.industry = answer;
+        } else if (question.includes('budget')) {
+          data.budget = answer;
+        } else if (question.includes('timeline') || question.includes('timeframe')) {
+          data.timeline = answer;
+        } else if (question.includes('challenge') || question.includes('problem')) {
+          data.currentChallenges = answer;
+        }
+      }
+    }
+
+    return data;
   };
 
   const handleSend = async () => {

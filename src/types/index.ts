@@ -117,6 +117,10 @@ export interface Client {
   hasAccount: boolean; // Has the client created a portal account?
   firebaseAuthUid?: string; // Firebase Auth UID when client creates account
   accountCreatedAt?: Date; // When they created their portal account
+
+  // Marketing Content
+  brandProfile?: BrandProfile; // Analyzed from uploaded logo
+  marketingContent?: GeneratedContent[]; // AI-generated marketing materials
 }
 
 // Client Onboarding Types
