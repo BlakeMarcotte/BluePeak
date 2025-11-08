@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -10,19 +11,60 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      setError('');
-      setLoading(true);
-      await login(email, password);
+      // Sign in with Firebase Auth directly (same as client portal)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Check if this user is a client (not internal team)
+      const checkResponse = await fetch(`/api/client-auth/profile?uid=${user.uid}`);
+
+      console.log('Client check response:', {
+        status: checkResponse.status,
+        ok: checkResponse.ok,
+        uid: user.uid
+      });
+
+      if (checkResponse.ok) {
+        // This is a client account, not internal team
+        const data = await checkResponse.json();
+        console.log('Found client account:', data.client.email);
+
+        // Sign them out immediately
+        await auth.signOut();
+
+        setError('This is a client account. Please use the client portal to log in.');
+        setLoading(false);
+
+        // Redirect to client portal login after 2 seconds
+        setTimeout(() => {
+          router.push('/client-portal/login');
+        }, 2000);
+        return;
+      }
+
+      // API returned 404 - not a client, proceed to internal dashboard
+      console.log('Not a client account, proceeding to dashboard');
       router.push('/dashboard');
     } catch (err: any) {
-      setError('Failed to log in. Please check your credentials.');
+      console.error('Login error:', err);
+
+      if (err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password');
+      } else if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email');
+      } else if (err.code === 'auth/wrong-password') {
+        setError('Incorrect password');
+      } else {
+        setError('Failed to log in. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -91,13 +133,22 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Footer Link */}
+        {/* Footer Links */}
         <p className="mt-6 text-center text-sm text-slate-600">
           Don&apos;t have an account?{' '}
           <Link href="/signup" className="text-indigo-600 hover:text-indigo-700 font-medium">
             Create account
           </Link>
         </p>
+
+        <div className="mt-4 pt-4 border-t border-slate-200 text-center text-sm text-slate-600">
+          <p>
+            Client portal login?{' '}
+            <Link href="/client-portal/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              Click here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

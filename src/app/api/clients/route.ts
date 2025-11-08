@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
       updatedAt: new Date(),
       userId: body.userId || 'demo-user', // In production, get from auth
+      hasAccount: false, // Client hasn't created portal account yet
     };
 
     const docRef = await adminDb.collection(CLIENTS_COLLECTION).add({
