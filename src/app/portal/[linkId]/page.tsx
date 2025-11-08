@@ -53,7 +53,8 @@ export default function ClientPortalPage() {
 
   const handleDiscoveryComplete = async (
     data: DiscoveryData,
-    messages: DiscoveryMessage[]
+    messages: DiscoveryMessage[],
+    logoUrl?: string
   ) => {
     setClientName(data.companyName || 'there');
 
@@ -68,7 +69,7 @@ export default function ClientPortalPage() {
       // Save client email for signup
       setClientEmail(client.email);
 
-      // Update the client with discovery data and conversation history
+      // Update the client with discovery data, conversation history, and logo
       const updateResponse = await fetch('/api/clients', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -76,6 +77,7 @@ export default function ClientPortalPage() {
           id: client.id,
           discoveryData: data,
           conversationHistory: messages,
+          logoUrl: logoUrl,
           onboardingStage: 'discovery_complete',
         }),
       });
