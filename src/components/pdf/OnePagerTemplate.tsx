@@ -203,15 +203,8 @@ export function OnePagerTemplate({
         <View style={styles.ctaSection}>
           <Text style={styles.ctaText}>{data.callToAction}</Text>
           <View style={styles.contactContainer}>
-            {data.contactInfo.email && (
-              <Text style={styles.contactText}>{data.contactInfo.email}</Text>
-            )}
-            {data.contactInfo.phone && (
-              <Text style={styles.contactText}>{data.contactInfo.phone}</Text>
-            )}
-            {data.contactInfo.website && (
-              <Text style={styles.contactText}>{data.contactInfo.website}</Text>
-            )}
+            <Text style={styles.contactText}>{data.contactInfo.email}</Text>
+            <Text style={styles.contactText}>{data.contactInfo.phone}</Text>
           </View>
         </View>
 

@@ -261,24 +261,14 @@ export function CorporateProfessionalTemplate({
         <View style={styles.ctaSection}>
           <Text style={styles.ctaHeading}>{data.callToAction}</Text>
           <View style={styles.contactTable}>
-            {data.contactInfo.email && (
-              <View style={styles.contactRow}>
-                <Text style={styles.contactLabel}>Email</Text>
-                <Text style={styles.contactValue}>{data.contactInfo.email}</Text>
-              </View>
-            )}
-            {data.contactInfo.phone && (
-              <View style={styles.contactRow}>
-                <Text style={styles.contactLabel}>Phone</Text>
-                <Text style={styles.contactValue}>{data.contactInfo.phone}</Text>
-              </View>
-            )}
-            {data.contactInfo.website && (
-              <View style={styles.contactRow}>
-                <Text style={styles.contactLabel}>Website</Text>
-                <Text style={styles.contactValue}>{data.contactInfo.website}</Text>
-              </View>
-            )}
+            <View style={styles.contactRow}>
+              <Text style={styles.contactLabel}>Email</Text>
+              <Text style={styles.contactValue}>{data.contactInfo.email}</Text>
+            </View>
+            <View style={styles.contactRow}>
+              <Text style={styles.contactLabel}>Phone</Text>
+              <Text style={styles.contactValue}>{data.contactInfo.phone}</Text>
+            </View>
           </View>
         </View>
 

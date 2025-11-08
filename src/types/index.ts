@@ -18,13 +18,18 @@ export interface CampaignFormData {
 
 export interface GeneratedContent {
   id?: string;
-  name?: string; // Custom name for the content piece
+  name: string; // Custom name for the content piece (required)
   type: ContentType;
   content: string;
   wordCount?: number;
   characterCount?: number;
   generatedAt: Date;
   pdfData?: PDFOnePagerData; // For pdf-onepager content type
+  published?: boolean; // Whether content is visible to client
+  variantOfId?: string; // ID of the original content this is a variant of
+  variantLabel?: string; // Label like "Original", "Variant A", "Variant B"
+  publicVoteId?: string; // Unique ID for public voting link
+  votes?: number; // Number of votes this variant received
 }
 
 export type PDFTemplate = 'modern-minimal' | 'bold-impact' | 'corporate-professional' | 'creative-geometric';
@@ -39,9 +44,8 @@ export interface PDFOnePagerData {
   }[];
   callToAction: string;
   contactInfo: {
-    email?: string;
-    phone?: string;
-    website?: string;
+    email: string;
+    phone: string;
   };
   template?: PDFTemplate; // Selected template style
 }

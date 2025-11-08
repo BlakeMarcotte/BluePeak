@@ -49,7 +49,7 @@ export default function SignupPage() {
         throw new Error('Failed to create user profile');
       }
 
-      router.push('/dashboard');
+      router.push('/clients');
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'Failed to create account');

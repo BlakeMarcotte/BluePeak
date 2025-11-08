@@ -80,7 +80,7 @@ export default function LoginPage() {
         });
       }
 
-      router.push('/dashboard');
+      router.push('/clients');
     } catch (err: any) {
       console.error('Login error:', err);
 

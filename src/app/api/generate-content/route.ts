@@ -15,6 +15,8 @@ interface GenerateRequest {
   brandProfile?: BrandProfile;
   contentType: ContentType;
   notes?: string;
+  clientEmail?: string;
+  clientPhone?: string;
 }
 
 function getPromptForContentType(
@@ -149,12 +151,7 @@ You must respond with ONLY a valid JSON object (no markdown code blocks, no expl
     {"value": "stat number/percentage", "label": "what it represents"},
     {"value": "stat number/percentage", "label": "what it represents"}
   ],
-  "callToAction": "Clear, action-oriented CTA (max 80 characters)",
-  "contactInfo": {
-    "email": "contact@example.com",
-    "phone": "(555) 123-4567",
-    "website": "www.example.com"
-  }
+  "callToAction": "Clear, action-oriented CTA (max 80 characters)"
 }
 
 Requirements:
@@ -163,7 +160,6 @@ Requirements:
 - Key benefits: 4 clear, specific benefits (each 10-15 words)
 - Stats: 3 impressive, relevant metrics with clear labels
 - CTA: Compelling call to action
-- Make contact info realistic for the industry
 ${brandProfile ? `- Tone: ${brandProfile.tone}` : ''}
 ${brandProfile ? `- Personality: ${brandProfile.personality.join(', ')}` : ''}
 
@@ -220,11 +216,17 @@ export async function POST(request: NextRequest) {
 
         const pdfData = JSON.parse(jsonString.trim());
 
+        // Add real client contact info
+        pdfData.contactInfo = {
+          email: body.clientEmail || 'contact@example.com',
+          phone: body.clientPhone || '(555) 123-4567',
+        };
+
         return NextResponse.json({
           content: JSON.stringify(pdfData, null, 2),
           wordCount,
           characterCount,
-          pdfData, // Include parsed PDF data
+          pdfData, // Include parsed PDF data with real contact info
         });
       } catch (parseError) {
         console.error('Failed to parse PDF JSON:', parseError);

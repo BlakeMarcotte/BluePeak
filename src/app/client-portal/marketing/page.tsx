@@ -20,6 +20,14 @@ export default function ClientMarketingPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ContentType>('pdf-onepager');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [editingPdfId, setEditingPdfId] = useState<string | null>(null);
+  const [editedPdfData, setEditedPdfData] = useState<any>(null);
+  const [savingPdf, setSavingPdf] = useState(false);
+  const [generatingVariant, setGeneratingVariant] = useState(false);
+  const [generatingVariantId, setGeneratingVariantId] = useState<string | null>(null);
+  const [pdfPreviews, setPdfPreviews] = useState<Record<string, string>>({});
+  const [loadingPdfPreviews, setLoadingPdfPreviews] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -53,9 +61,297 @@ export default function ClientMarketingPage() {
     return () => unsubscribe();
   }, [router]);
 
+  // Generate PDF previews when client data loads or active tab changes
+  useEffect(() => {
+    if (client && activeTab === 'pdf-onepager') {
+      const pdfContent = (client.marketingContent || []).filter(
+        item => item.published && item.type === 'pdf-onepager' && item.pdfData
+      );
+
+      pdfContent.forEach(item => {
+        if (item.id && !pdfPreviews[item.id] && !loadingPdfPreviews[item.id]) {
+          generatePdfPreview(item.id, item.pdfData);
+        }
+      });
+    }
+  }, [client, activeTab]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(pdfPreviews).forEach(url => {
+        window.URL.revokeObjectURL(url);
+      });
+    };
+  }, [pdfPreviews]);
+
+  const generatePdfPreview = async (contentId: string, pdfData: any) => {
+    if (!client) return;
+
+    setLoadingPdfPreviews(prev => ({ ...prev, [contentId]: true }));
+
+    try {
+      const response = await fetch('/api/render-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pdfData,
+          brandProfile: client.brandProfile,
+          logoUrl: client.logoUrl,
+          clientName: client.company,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to render PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      setPdfPreviews(prev => ({ ...prev, [contentId]: url }));
+    } catch (error) {
+      console.error('Error generating PDF preview:', error);
+    } finally {
+      setLoadingPdfPreviews(prev => ({ ...prev, [contentId]: false }));
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert('Copied to clipboard!');
+  };
+
+  const downloadPDF = async (pdfData: any, contentName?: string) => {
+    if (!client) return;
+
+    setDownloadingPdf(true);
+    try {
+      const response = await fetch('/api/render-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pdfData,
+          brandProfile: client.brandProfile,
+          logoUrl: client.logoUrl,
+          clientName: client.company,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to render PDF');
+      }
+
+      // Create blob from response and trigger download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+
+      // Use content name if provided, otherwise use client name
+      const filename = contentName
+        ? `${contentName.replace(/[^a-z0-9]/gi, '_')}.pdf`
+        : `${client.company.replace(/[^a-z0-9]/gi, '_')}_OnePager.pdf`;
+
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  const startEditingPdf = (contentId: string, pdfData: any) => {
+    setEditingPdfId(contentId);
+    setEditedPdfData({ ...pdfData });
+  };
+
+  const cancelEditingPdf = () => {
+    setEditingPdfId(null);
+    setEditedPdfData(null);
+  };
+
+  const updatePdfField = (field: string, value: any) => {
+    setEditedPdfData((prev: any) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const updatePdfStat = (index: number, field: string, value: string) => {
+    setEditedPdfData((prev: any) => {
+      const newStats = [...(prev.stats || [])];
+      newStats[index] = { ...newStats[index], [field]: value };
+      return { ...prev, stats: newStats };
+    });
+  };
+
+  const updatePdfBenefit = (index: number, value: string) => {
+    setEditedPdfData((prev: any) => {
+      const newBenefits = [...(prev.keyBenefits || [])];
+      newBenefits[index] = value;
+      return { ...prev, keyBenefits: newBenefits };
+    });
+  };
+
+  const updatePdfContact = (field: string, value: string) => {
+    setEditedPdfData((prev: any) => ({
+      ...prev,
+      contactInfo: {
+        ...prev.contactInfo,
+        [field]: value
+      }
+    }));
+  };
+
+  const savePdfEdit = async (contentId: string) => {
+    if (!client || !editedPdfData) return;
+
+    setSavingPdf(true);
+    try {
+      // Find the content item and update it
+      const updatedContent = (client.marketingContent || []).map(c =>
+        c.id === contentId ? { ...c, pdfData: editedPdfData } : c
+      );
+
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          marketingContent: updatedContent,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save PDF edits');
+
+      // Reload client data
+      const profileResponse = await fetch(`/api/client-auth/profile?uid=${auth.currentUser?.uid}`);
+      if (profileResponse.ok) {
+        const data = await profileResponse.json();
+        const clientData: Client = {
+          ...data.client,
+          createdAt: new Date(data.client.createdAt),
+          updatedAt: new Date(data.client.updatedAt),
+          accountCreatedAt: data.client.accountCreatedAt ? new Date(data.client.accountCreatedAt) : undefined,
+        };
+        setClient(clientData);
+
+        // Regenerate PDF preview with edited data
+        if (editedPdfData) {
+          generatePdfPreview(contentId, editedPdfData);
+        }
+      }
+
+      setEditingPdfId(null);
+      setEditedPdfData(null);
+    } catch (error) {
+      console.error('Error saving PDF edit:', error);
+      alert('Failed to save PDF changes. Please try again.');
+    } finally {
+      setSavingPdf(false);
+    }
+  };
+
+  const generateVariant = async (originalContent: GeneratedContent) => {
+    if (!client) return;
+
+    setGeneratingVariant(true);
+    setGeneratingVariantId(originalContent.id!);
+
+    try {
+      // Count existing variants to determine label
+      const existingVariants = (client.marketingContent || []).filter(
+        c => c.variantOfId === originalContent.id
+      );
+      const variantLetter = String.fromCharCode(65 + existingVariants.length); // A, B, C, etc.
+
+      // Generate variant via API
+      const response = await fetch('/api/generate-variant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalContent: originalContent.content,
+          originalName: originalContent.name,
+          contentType: originalContent.type,
+          clientName: client.company,
+          industry: client.industry || '',
+          topic: originalContent.name,
+          targetAudience: client.discoveryData?.targetAudience || 'General audience',
+          brandVoice: client.discoveryData?.businessGoals || '',
+          brandProfile: client.brandProfile,
+          pdfData: originalContent.pdfData,
+          clientEmail: client.email,
+          clientPhone: client.phone,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate variant');
+
+      const result = await response.json();
+
+      // Create new variant content
+      const newVariant: GeneratedContent = {
+        id: `variant_${Date.now()}`,
+        name: `${originalContent.name} - Variant ${variantLetter}`,
+        type: originalContent.type,
+        content: result.content,
+        wordCount: result.wordCount,
+        characterCount: result.characterCount,
+        generatedAt: new Date(),
+        pdfData: result.pdfData,
+        published: true,
+        variantOfId: originalContent.id,
+        variantLabel: `Variant ${variantLetter}`,
+      };
+
+      // If the original doesn't have a label yet, add "Original"
+      const updatedContent = (client.marketingContent || []).map(c => {
+        if (c.id === originalContent.id && !c.variantLabel) {
+          return { ...c, variantLabel: 'Original' };
+        }
+        return c;
+      });
+
+      // Add the new variant
+      updatedContent.push(newVariant);
+
+      // Save to database
+      const saveResponse = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          marketingContent: updatedContent,
+        }),
+      });
+
+      if (!saveResponse.ok) throw new Error('Failed to save variant');
+
+      // Reload client data
+      const profileResponse = await fetch(`/api/client-auth/profile?uid=${auth.currentUser?.uid}`);
+      if (profileResponse.ok) {
+        const data = await profileResponse.json();
+        const clientData: Client = {
+          ...data.client,
+          createdAt: new Date(data.client.createdAt),
+          updatedAt: new Date(data.client.updatedAt),
+          accountCreatedAt: data.client.accountCreatedAt ? new Date(data.client.accountCreatedAt) : undefined,
+        };
+        setClient(clientData);
+      }
+
+      alert(`Variant ${variantLetter} generated successfully!`);
+    } catch (error) {
+      console.error('Error generating variant:', error);
+      alert('Failed to generate variant. Please try again.');
+    } finally {
+      setGeneratingVariant(false);
+      setGeneratingVariantId(null);
+    }
   };
 
   if (loading) {
@@ -76,10 +372,45 @@ export default function ClientMarketingPage() {
 
   if (!client) return null;
 
-  const marketingContent = client.marketingContent || [];
-  const filteredContent = marketingContent
-    .filter((item) => item.type === activeTab)
-    .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
+  // Only show published content to clients
+  const marketingContent = (client.marketingContent || []).filter(item => item.published === true);
+
+  // Group variants with their originals
+  const contentByType = marketingContent.filter((item) => item.type === activeTab);
+
+  // Sort into groups: originals first, then their variants
+  const groupedContent: GeneratedContent[] = [];
+  const processedIds = new Set<string>();
+
+  contentByType.forEach((item) => {
+    // Skip if already processed (as a variant)
+    if (processedIds.has(item.id!)) return;
+
+    // If this is an original or standalone content
+    if (!item.variantOfId) {
+      groupedContent.push(item);
+      processedIds.add(item.id!);
+
+      // Find all its variants
+      const variants = contentByType
+        .filter(v => v.variantOfId === item.id)
+        .sort((a, b) => new Date(a.generatedAt).getTime() - new Date(b.generatedAt).getTime());
+
+      variants.forEach(variant => {
+        groupedContent.push(variant);
+        processedIds.add(variant.id!);
+      });
+    }
+  });
+
+  // Add any orphaned variants (shouldn't happen, but just in case)
+  contentByType.forEach((item) => {
+    if (!processedIds.has(item.id!)) {
+      groupedContent.push(item);
+    }
+  });
+
+  const filteredContent = groupedContent;
 
   const activeContentType = CONTENT_TYPES.find((ct) => ct.value === activeTab);
 
@@ -92,42 +423,379 @@ export default function ClientMarketingPage() {
           <p className="text-slate-600">Access all the marketing materials generated for {client.company}</p>
         </div>
 
-        {marketingContent.length === 0 ? (
+        {/* Content Type Tabs */}
+        <div className="bg-white border border-slate-200 rounded-lg mb-6">
+          <div className="border-b border-slate-200 overflow-x-auto">
+            <nav className="flex -mb-px">
+              {CONTENT_TYPES.map(({ value, label }) => {
+                const count = marketingContent.filter((c) => c.type === value).length;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => setActiveTab(value)}
+                    className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab === value
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                    }`}
+                  >
+                    {label}
+                    {count > 0 && (
+                      <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-700">
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* Content Display */}
+        {filteredContent.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">No Marketing Content Yet</h3>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">
+              No {activeContentType?.label} Yet
+            </h3>
             <p className="text-slate-600 max-w-md mx-auto">
-              Your BluePeak team is working on creating marketing materials for your business.
+              Your BluePeak team is working on creating marketing materials for your business. Published content will appear here.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {marketingContent.map((item) => (
-              <div key={item.id} className="bg-white border border-slate-200 rounded-lg p-6">
+            {filteredContent.map((item, index) => {
+              const isVariant = !!item.variantOfId;
+              const nextIsVariant = index < filteredContent.length - 1 && filteredContent[index + 1].variantOfId === item.variantOfId;
+
+              return (
+              <div key={item.id} className={`bg-white border rounded-lg p-6 ${
+                isVariant ? 'border-purple-200 ml-8' : 'border-slate-200'
+              }`}>
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    {item.name && <h3 className="text-lg font-semibold text-slate-900 mb-1">{item.name}</h3>}
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-slate-900">{item.name}</h3>
+                      {item.variantLabel && (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded">
+                          {item.variantLabel}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-slate-500">
-                      {item.type} • Generated {new Date(item.generatedAt).toLocaleDateString()}
+                      {item.wordCount && `${item.wordCount} words`}
+                      {item.characterCount && ` • ${item.characterCount} characters`}
+                      {' • '}
+                      Generated {new Date(item.generatedAt).toLocaleDateString()} at{' '}
+                      {new Date(item.generatedAt).toLocaleTimeString()}
                     </p>
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(item.content)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
-                  >
-                    Copy
-                  </button>
+                  <div className="flex gap-2">
+                    {/* A/B Test Button */}
+                    <button
+                      onClick={() => router.push(`/client-portal/ab-test/${item.id}`)}
+                      className="px-3 py-1.5 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-md transition-colors flex items-center gap-1"
+                      title="Compare A/B test variants"
+                    >
+                      <span>🔬</span>
+                      A/B Test
+                    </button>
+                    {/* PDF Download Button */}
+                    {activeTab === 'pdf-onepager' && item.pdfData && (
+                      <>
+                        <button
+                          onClick={() => downloadPDF(item.pdfData, item.name)}
+                          disabled={downloadingPdf}
+                          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {downloadingPdf ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Generating...
+                            </>
+                          ) : (
+                            'Download PDF'
+                          )}
+                        </button>
+                        <button
+                          onClick={() => startEditingPdf(item.id!, item.pdfData)}
+                          disabled={downloadingPdf}
+                          className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Edit PDF Content
+                        </button>
+                      </>
+                    )}
+                    {/* Regular Content Buttons */}
+                    {activeTab !== 'pdf-onepager' && (
+                      <button
+                        onClick={() => copyToClipboard(item.content)}
+                        className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
+                      >
+                        Copy
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="prose prose-sm max-w-none">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-lg">
-                    {item.content}
-                  </pre>
+
+                {/* Content Display */}
+                <div>
+                  {activeTab === 'pdf-onepager' && item.pdfData ? (
+                    /* PDF Preview */
+                    <div className="w-full">
+                      {loadingPdfPreviews[item.id!] ? (
+                        <div className="flex items-center justify-center h-96 bg-slate-50 rounded-lg">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                            <p className="text-slate-600">Generating PDF preview...</p>
+                          </div>
+                        </div>
+                      ) : pdfPreviews[item.id!] ? (
+                        <iframe
+                          src={`${pdfPreviews[item.id!]}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                          className="w-full h-[600px] border border-slate-300 rounded-lg"
+                          title={`${item.name} PDF Preview`}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-96 bg-slate-50 rounded-lg">
+                          <p className="text-slate-600">PDF preview not available</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Regular Content Display */
+                    <div className="prose prose-sm max-w-none">
+                      <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-lg">
+                        {item.content}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
+
+      {/* PDF Edit Modal */}
+      {editingPdfId && editedPdfData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
+              <h2 className="text-xl font-bold text-slate-900">Edit PDF Content</h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Edit your PDF content below. Character limits help maintain proper layout.
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-4 space-y-6">
+              {/* Headline */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Headline <span className="text-xs text-slate-500">({editedPdfData.headline?.length || 0}/60 characters)</span>
+                </label>
+                <input
+                  type="text"
+                  value={editedPdfData.headline || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 60) {
+                      updatePdfField('headline', e.target.value);
+                    }
+                  }}
+                  maxLength={60}
+                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    (editedPdfData.headline?.length || 0) > 55 ? 'border-yellow-500' : 'border-slate-300'
+                  }`}
+                  placeholder="Enter headline..."
+                />
+                {(editedPdfData.headline?.length || 0) > 55 && (
+                  <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                )}
+              </div>
+
+              {/* Subheadline */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Subheadline <span className="text-xs text-slate-500">({editedPdfData.subheadline?.length || 0}/120 characters)</span>
+                </label>
+                <textarea
+                  value={editedPdfData.subheadline || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 120) {
+                      updatePdfField('subheadline', e.target.value);
+                    }
+                  }}
+                  maxLength={120}
+                  rows={2}
+                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    (editedPdfData.subheadline?.length || 0) > 110 ? 'border-yellow-500' : 'border-slate-300'
+                  }`}
+                  placeholder="Enter subheadline..."
+                />
+                {(editedPdfData.subheadline?.length || 0) > 110 && (
+                  <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                )}
+              </div>
+
+              {/* Stats */}
+              {editedPdfData.stats && editedPdfData.stats.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-slate-700 mb-3">Stats</h3>
+                  <div className="space-y-3">
+                    {editedPdfData.stats.map((stat: any, idx: number) => (
+                      <div key={idx} className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Value <span className="text-slate-500">({stat.value?.length || 0}/10)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={stat.value || ''}
+                            onChange={(e) => {
+                              if (e.target.value.length <= 10) {
+                                updatePdfStat(idx, 'value', e.target.value);
+                              }
+                            }}
+                            maxLength={10}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                            placeholder="e.g., 250+"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Label <span className="text-slate-500">({stat.label?.length || 0}/30)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={stat.label || ''}
+                            onChange={(e) => {
+                              if (e.target.value.length <= 30) {
+                                updatePdfStat(idx, 'label', e.target.value);
+                              }
+                            }}
+                            maxLength={30}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                            placeholder="e.g., Active Users"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Key Benefits */}
+              {editedPdfData.keyBenefits && editedPdfData.keyBenefits.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-slate-700 mb-3">Key Benefits</h3>
+                  <div className="space-y-3">
+                    {editedPdfData.keyBenefits.map((benefit: string, idx: number) => (
+                      <div key={idx}>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                          Benefit {idx + 1} <span className="text-slate-500">({benefit?.length || 0}/150 characters)</span>
+                        </label>
+                        <textarea
+                          value={benefit || ''}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 150) {
+                              updatePdfBenefit(idx, e.target.value);
+                            }
+                          }}
+                          maxLength={150}
+                          rows={2}
+                          className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm ${
+                            (benefit?.length || 0) > 140 ? 'border-yellow-500' : 'border-slate-300'
+                          }`}
+                          placeholder="Enter benefit..."
+                        />
+                        {(benefit?.length || 0) > 140 && (
+                          <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Call to Action */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Call to Action <span className="text-xs text-slate-500">({editedPdfData.callToAction?.length || 0}/80 characters)</span>
+                </label>
+                <textarea
+                  value={editedPdfData.callToAction || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 80) {
+                      updatePdfField('callToAction', e.target.value);
+                    }
+                  }}
+                  maxLength={80}
+                  rows={2}
+                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    (editedPdfData.callToAction?.length || 0) > 75 ? 'border-yellow-500' : 'border-slate-300'
+                  }`}
+                  placeholder="Enter call to action..."
+                />
+                {(editedPdfData.callToAction?.length || 0) > 75 && (
+                  <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                )}
+              </div>
+
+              {/* Contact Info */}
+              <div>
+                <h3 className="text-sm font-medium text-slate-700 mb-3">Contact Information</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={editedPdfData.contactInfo?.email || ''}
+                      onChange={(e) => updatePdfContact('email', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      placeholder="contact@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      value={editedPdfData.contactInfo?.phone || ''}
+                      onChange={(e) => updatePdfContact('phone', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={cancelEditingPdf}
+                disabled={savingPdf}
+                className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => savePdfEdit(editingPdfId)}
+                disabled={savingPdf}
+                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                {savingPdf && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
+                {savingPdf ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

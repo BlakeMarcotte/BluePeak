@@ -20,10 +20,9 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/clients', label: 'Clients' },
     { href: '/marketing', label: 'Marketing' },
     { href: '/client-onboarding', label: 'Client Onboarding' },
-    { href: '/clients', label: 'Clients' },
   ];
 
   return (
@@ -32,7 +31,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-14">
           {/* Logo and Brand */}
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/clients" className="flex items-center gap-2">
               <h1 className="text-lg font-semibold text-slate-900">BluePeak</h1>
             </Link>
 

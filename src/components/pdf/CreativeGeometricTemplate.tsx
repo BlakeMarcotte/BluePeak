@@ -281,21 +281,12 @@ export function CreativeGeometricTemplate({
           <View style={styles.ctaContent}>
             <Text style={styles.ctaHeading}>{data.callToAction}</Text>
             <View style={styles.contactBubbles}>
-              {data.contactInfo.email && (
-                <View style={styles.contactBubble}>
-                  <Text style={styles.contactText}>{data.contactInfo.email}</Text>
-                </View>
-              )}
-              {data.contactInfo.phone && (
-                <View style={styles.contactBubble}>
-                  <Text style={styles.contactText}>{data.contactInfo.phone}</Text>
-                </View>
-              )}
-              {data.contactInfo.website && (
-                <View style={styles.contactBubble}>
-                  <Text style={styles.contactText}>{data.contactInfo.website}</Text>
-                </View>
-              )}
+              <View style={styles.contactBubble}>
+                <Text style={styles.contactText}>{data.contactInfo.email}</Text>
+              </View>
+              <View style={styles.contactBubble}>
+                <Text style={styles.contactText}>{data.contactInfo.phone}</Text>
+              </View>
             </View>
           </View>
         </View>

@@ -224,21 +224,12 @@ export function BoldImpactTemplate({
         <View style={styles.ctaSection}>
           <Text style={styles.ctaText}>{data.callToAction}</Text>
           <View style={styles.contactGrid}>
-            {data.contactInfo.email && (
-              <View style={styles.contactItem}>
-                <Text style={styles.contactText}>{data.contactInfo.email}</Text>
-              </View>
-            )}
-            {data.contactInfo.phone && (
-              <View style={styles.contactItem}>
-                <Text style={styles.contactText}>{data.contactInfo.phone}</Text>
-              </View>
-            )}
-            {data.contactInfo.website && (
-              <View style={styles.contactItem}>
-                <Text style={styles.contactText}>{data.contactInfo.website}</Text>
-              </View>
-            )}
+            <View style={styles.contactItem}>
+              <Text style={styles.contactText}>{data.contactInfo.email}</Text>
+            </View>
+            <View style={styles.contactItem}>
+              <Text style={styles.contactText}>{data.contactInfo.phone}</Text>
+            </View>
           </View>
         </View>
 

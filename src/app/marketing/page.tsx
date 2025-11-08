@@ -108,7 +108,7 @@ export default function MarketingPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-white border border-slate-200 rounded-lg p-6">
               <div className="text-3xl font-bold text-indigo-600 mb-1">
                 {clients.length}
@@ -129,6 +129,13 @@ export default function MarketingPage() {
               </div>
               <div className="text-sm text-slate-600">Total Content</div>
               <p className="text-xs text-slate-500 mt-1">Marketing materials generated</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="text-3xl font-bold text-emerald-600 mb-1">
+                {clients.reduce((sum, c) => sum + (c.marketingContent?.filter(m => m.published).length || 0), 0)}
+              </div>
+              <div className="text-sm text-slate-600">Published</div>
+              <p className="text-xs text-slate-500 mt-1">Visible to clients</p>
             </div>
           </div>
 
@@ -204,6 +211,14 @@ export default function MarketingPage() {
                       </span>
                       <span className="text-xs text-slate-600">
                         Content<br/>Pieces
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-emerald-600">
+                        {client.marketingContent?.filter(m => m.published).length || 0}
+                      </span>
+                      <span className="text-xs text-slate-600">
+                        Published
                       </span>
                     </div>
                     {client.brandProfile && (
