@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { ProgressReportData } from '@/types';
+import { useState, useEffect } from 'react';
+import { ProgressReportData, Client } from '@/types';
 
-export default function ProgressReportGenerator() {
+interface ProgressReportGeneratorProps {
+  clients?: Client[];
+}
+
+export default function ProgressReportGenerator({ clients = [] }: ProgressReportGeneratorProps) {
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [formData, setFormData] = useState<ProgressReportData>({
     clientId: '',
     clientName: '',
@@ -18,6 +23,65 @@ export default function ProgressReportGenerator() {
   const [tone, setTone] = useState<'formal' | 'casual' | 'detailed'>('casual');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Auto-populate form when client is selected
+  useEffect(() => {
+    if (!selectedClientId) return;
+
+    const selectedClient = clients.find(c => c.id === selectedClientId);
+    if (!selectedClient) return;
+
+    const marketingContent = selectedClient.marketingContent || [];
+
+    // Group content by type and count
+    const contentByType: Record<string, number> = {};
+    marketingContent.forEach(content => {
+      contentByType[content.type] = (contentByType[content.type] || 0) + 1;
+    });
+
+    // Generate completed tasks from marketing content
+    const tasks: string[] = [];
+    Object.entries(contentByType).forEach(([type, count]) => {
+      const typeLabel = {
+        'blog': 'blog post',
+        'linkedin': 'LinkedIn post',
+        'twitter': 'Twitter thread',
+        'email': 'email campaign',
+        'ad-copy': 'ad copy set',
+        'pdf-onepager': 'PDF one-pager'
+      }[type] || type;
+
+      const plural = count > 1 ? typeLabel + 's' : typeLabel;
+      tasks.push(`Created ${count} ${plural}`);
+    });
+
+    // Generate suggested metrics based on content
+    const totalContent = marketingContent.length;
+    const suggestedMetrics = totalContent > 0 ? [
+      { label: 'Content Pieces Delivered', value: totalContent.toString() },
+      { label: 'Platforms Covered', value: Object.keys(contentByType).length.toString() },
+    ] : [{ label: '', value: '' }];
+
+    // Generate suggested upcoming deliverables
+    const hasContent = marketingContent.length > 0;
+    const suggestedDeliverables = hasContent ? [
+      'Schedule and publish created content across channels',
+      'Monitor engagement metrics and performance',
+      'Create next batch of marketing materials based on performance data',
+    ] : [''];
+
+    // Set form data with auto-populated tasks
+    setFormData({
+      clientId: selectedClient.id,
+      clientName: selectedClient.company,
+      reportPeriod: '',
+      completedTasks: tasks.length > 0 ? tasks : [''],
+      metrics: suggestedMetrics,
+      upcomingDeliverables: suggestedDeliverables,
+      blockers: '',
+      highlights: marketingContent.length > 0 ? `Successfully generated ${marketingContent.length} high-quality marketing materials tailored to ${selectedClient.company}'s brand and audience` : '',
+    });
+  }, [selectedClientId, clients]);
 
   const handleTaskChange = (index: number, value: string) => {
     const newTasks = [...formData.completedTasks];
@@ -117,6 +181,32 @@ export default function ProgressReportGenerator() {
         </h2>
 
         <div className="space-y-6">
+          {/* Client Selector */}
+          {clients.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Client (Auto-populate from marketing content)
+              </label>
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+              >
+                <option value="">-- Select a client --</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.company} ({client.marketingContent?.length || 0} content pieces)
+                  </option>
+                ))}
+              </select>
+              {selectedClientId && (
+                <p className="text-xs text-purple-600 mt-1">
+                  ✨ Tasks auto-populated from marketing content!
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Client Info */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -128,7 +218,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, clientName: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               placeholder="e.g., Acme Corporation"
             />
           </div>
@@ -143,7 +233,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, reportPeriod: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
               placeholder="e.g., Week of Nov 4-8 or October 2024"
             />
           </div>
@@ -159,7 +249,7 @@ export default function ProgressReportGenerator() {
                   type="text"
                   value={task}
                   onChange={(e) => handleTaskChange(index, e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="e.g., Published 3 blog posts"
                 />
                 {formData.completedTasks.length > 1 && (
@@ -193,7 +283,7 @@ export default function ProgressReportGenerator() {
                   onChange={(e) =>
                     handleMetricChange(index, 'label', e.target.value)
                   }
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="Metric name"
                 />
                 <input
@@ -202,7 +292,7 @@ export default function ProgressReportGenerator() {
                   onChange={(e) =>
                     handleMetricChange(index, 'value', e.target.value)
                   }
-                  className="w-32 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-32 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="Value"
                 />
                 {formData.metrics.length > 1 && (
@@ -236,7 +326,7 @@ export default function ProgressReportGenerator() {
                   onChange={(e) =>
                     handleDeliverableChange(index, e.target.value)
                   }
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="e.g., Email campaign launching next week"
                 />
                 {formData.upcomingDeliverables.length > 1 && (
@@ -267,7 +357,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, highlights: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
               rows={2}
               placeholder="Any special wins or highlights to emphasize"
             />
@@ -282,7 +372,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, blockers: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
               rows={2}
               placeholder="Any challenges or blockers to mention"
             />

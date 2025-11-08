@@ -39,6 +39,10 @@ export default function ClientOnboardingPage() {
         createdAt: new Date(client.createdAt),
         updatedAt: new Date(client.updatedAt),
         meetingDate: client.meetingDate ? new Date(client.meetingDate) : undefined,
+        marketingContent: (client.marketingContent || []).map((content: any) => ({
+          ...content,
+          generatedAt: new Date(content.generatedAt),
+        })),
       }));
       // Show all clients in the onboarding pipeline (including accepted ones)
       setClients(clientsWithDates);
@@ -440,7 +444,7 @@ export default function ClientOnboardingPage() {
                 </div>
               </div>
 
-              <ProgressReportGenerator />
+              <ProgressReportGenerator clients={clients} />
             </div>
           )}
         </main>
