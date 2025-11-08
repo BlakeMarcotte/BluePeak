@@ -144,13 +144,19 @@ export interface ClientProposal {
   clientId?: string;
   clientName: string;
   discoveryData: DiscoveryData;
+
+  // Generated content from Claude
   executiveSummary: string;
   scopeOfWork: string;
   timeline: string;
   pricing: string;
   deliverables: string[];
+
+  // PDF storage
+  pdfUrl?: string; // Firebase Storage URL for the generated PDF
+
   generatedAt: Date;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
+  proposalMeetingDate?: Date; // When client scheduled the meeting to discuss
 }
 
 export interface ProgressReportData {

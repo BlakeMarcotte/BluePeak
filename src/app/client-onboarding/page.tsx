@@ -90,23 +90,72 @@ export default function ClientOnboardingPage() {
     alert(`Discovery link sent to ${client.email}!\n\nLink copied to clipboard:\n${link}`);
   };
 
-  const handleScheduleMeeting = async (clientId: string) => {
-    // In production, this would open a calendar picker
-    const meetingDate = prompt('Enter meeting date/time (or press OK to use default):');
-    const date = meetingDate ? new Date(meetingDate) : new Date(Date.now() + 86400000 * 3); // 3 days from now
-
-    await updateClient(clientId, {
-      onboardingStage: 'meeting_scheduled',
-      meetingDate: date,
-    });
-
-    alert(`Meeting scheduled for ${date.toLocaleString()}`);
-  };
-
   const handleGenerateProposal = async (clientId: string) => {
-    await updateClient(clientId, { onboardingStage: 'proposal_generated' });
+    const client = clients.find((c) => c.id === clientId);
+    if (!client || !client.conversationHistory) {
+      alert('No discovery conversation found for this client.');
+      return;
+    }
 
-    alert('Proposal generated! (In production, this would generate the actual proposal)');
+    try {
+      // Show loading state
+      alert('Generating proposal... This may take a moment.');
+
+      // Step 1: Generate proposal text with Claude
+      const textResponse = await fetch('/api/generate-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationHistory: client.conversationHistory,
+        }),
+      });
+
+      if (!textResponse.ok) throw new Error('Failed to generate proposal text');
+
+      const proposalData = await textResponse.json();
+
+      // Step 2: Generate PDF from the proposal data
+      const pdfResponse = await fetch('/api/generate-proposal-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: client.company || client.name,
+          executiveSummary: proposalData.executiveSummary,
+          scopeOfWork: proposalData.scopeOfWork,
+          timeline: proposalData.timeline,
+          pricing: proposalData.pricing,
+          deliverables: proposalData.deliverables,
+        }),
+      });
+
+      if (!pdfResponse.ok) throw new Error('Failed to generate PDF');
+
+      const { pdfData } = await pdfResponse.json();
+
+      // Create the proposal object
+      const proposal = {
+        clientName: client.company || client.name,
+        discoveryData: client.discoveryData || {},
+        executiveSummary: proposalData.executiveSummary,
+        scopeOfWork: proposalData.scopeOfWork,
+        timeline: proposalData.timeline,
+        pricing: proposalData.pricing,
+        deliverables: proposalData.deliverables,
+        pdfUrl: pdfData, // Store the data URI directly
+        generatedAt: new Date(),
+      };
+
+      // Update the client with the proposal (keep stage at discovery_complete)
+      await updateClient(clientId, {
+        proposal,
+        // Don't change onboardingStage - client will schedule meeting first
+      });
+
+      alert('Proposal generated successfully! Client can now view and download the PDF from their dashboard.');
+    } catch (error) {
+      console.error('Error generating proposal:', error);
+      alert('Failed to generate proposal. Please try again.');
+    }
   };
 
   const handleSendProposal = async (clientId: string) => {
@@ -251,7 +300,6 @@ export default function ClientOnboardingPage() {
                       key={client.id}
                       client={client}
                       onSendDiscovery={handleSendDiscovery}
-                      onScheduleMeeting={handleScheduleMeeting}
                       onGenerateProposal={handleGenerateProposal}
                       onSendProposal={handleSendProposal}
                     />

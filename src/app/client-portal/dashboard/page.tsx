@@ -6,12 +6,15 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Client } from '@/types';
 import ClientPortalNav from '@/components/ClientPortalNav';
+import MeetingScheduler from '@/components/MeetingScheduler';
 
 export default function ClientDashboardPage() {
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [showProposal, setShowProposal] = useState(false);
 
   useEffect(() => {
     // Check auth state
@@ -41,6 +44,26 @@ export default function ClientDashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/client-portal/login');
+  };
+
+  const handleMeetingScheduled = (date: Date) => {
+    // Update local client state
+    if (client && client.proposal) {
+      setClient({
+        ...client,
+        proposal: {
+          ...client.proposal,
+          proposalMeetingDate: date,
+        },
+        onboardingStage: 'meeting_scheduled',
+      });
+    }
+    setShowScheduler(false);
+    alert('Meeting confirmed! You will receive a calendar invite shortly.');
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -131,16 +154,131 @@ export default function ClientDashboardPage() {
         </div>
 
         {/* Proposal Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Marketing Proposal</h3>
-          {client?.proposal ? (
-            <div>
-              <p className="text-gray-600 mb-4">Your customized proposal is ready!</p>
-              <button className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors">
-                View Full Proposal
-              </button>
+        {client?.proposal && !showScheduler ? (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-semibold text-gray-900">Your Marketing Proposal</h3>
+              {!showProposal && (
+                <button
+                  onClick={() => setShowProposal(true)}
+                  className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                >
+                  View Full Proposal
+                </button>
+              )}
+              {showProposal && (
+                <button
+                  onClick={() => setShowProposal(false)}
+                  className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                >
+                  Hide Proposal
+                </button>
+              )}
             </div>
-          ) : (
+
+            {showProposal && (
+              <div className="prose max-w-none space-y-6">
+                {/* Executive Summary */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Executive Summary</h4>
+                  <p className="text-gray-700 whitespace-pre-wrap">{client.proposal.executiveSummary}</p>
+                </div>
+
+                {/* Scope of Work */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Scope of Work</h4>
+                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.scopeOfWork }} />
+                </div>
+
+                {/* Timeline */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Timeline</h4>
+                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.timeline }} />
+                </div>
+
+                {/* Pricing */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Investment</h4>
+                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: client.proposal.pricing }} />
+                </div>
+
+                {/* Deliverables */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Deliverables</h4>
+                  <ul className="list-disc list-inside text-gray-700 space-y-1">
+                    {client.proposal.deliverables.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Download Button */}
+            {client.proposal.pdfUrl && (
+              <div className="mt-6 flex gap-3">
+                <a
+                  href={client.proposal.pdfUrl}
+                  download={`${client.company}_Proposal.pdf`}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download PDF
+                </a>
+              </div>
+            )}
+
+            {/* Meeting CTA */}
+            {!client.proposal.proposalMeetingDate ? (
+              <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-purple-900 mb-2">Next Step: Schedule Your Discussion</h4>
+                <p className="text-purple-800 mb-4">
+                  Let's discuss this proposal in detail. Select a time that works best for you.
+                </p>
+                <button
+                  onClick={() => setShowScheduler(true)}
+                  className="bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                >
+                  Schedule Meeting
+                </button>
+              </div>
+            ) : (
+              <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-green-900">Meeting Scheduled</p>
+                    <p className="text-green-800">
+                      {new Date(client.proposal.proposalMeetingDate).toLocaleString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short',
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : client?.proposal && showScheduler ? (
+          <div className="mb-8">
+            <MeetingScheduler clientId={client.id} onScheduled={handleMeetingScheduled} />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Marketing Proposal</h3>
             <div className="text-center py-8">
               <svg
                 className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -160,8 +298,8 @@ export default function ClientDashboardPage() {
                 Our team is crafting your customized marketing proposal. You'll be notified when it's ready!
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Content Library Quick Access */}
         <div className="bg-white rounded-lg shadow p-6">
