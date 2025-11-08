@@ -190,17 +190,21 @@ export default function ClientDashboardPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-2">
-              <button className="w-full text-left px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-medium text-sm transition-colors">
-                View Proposal
-              </button>
+              {client?.proposal?.pdfUrl && (
+                <a
+                  href={client.proposal.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full block text-left px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-medium text-sm transition-colors"
+                >
+                  View Proposal
+                </a>
+              )}
               <button
                 onClick={() => router.push('/client-portal/marketing')}
                 className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors"
               >
                 Content Library
-              </button>
-              <button className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors">
-                Analytics
               </button>
             </div>
           </div>
