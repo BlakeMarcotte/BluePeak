@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebaseAdmin';
+import { adminDb, adminAuth, adminStorage } from '@/lib/firebaseAdmin';
 import { Client } from '@/types';
 
 const CLIENTS_COLLECTION = 'clients';
@@ -131,7 +131,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete a client
+// DELETE - Delete a client and all associated data
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -144,9 +144,68 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await adminDb.collection(CLIENTS_COLLECTION).doc(id).delete();
+    // Get client data first to access related resources
+    const clientDoc = await adminDb.collection(CLIENTS_COLLECTION).doc(id).get();
 
-    return NextResponse.json({ success: true });
+    if (!clientDoc.exists) {
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+
+    const clientData = clientDoc.data();
+
+    // Delete Firebase Auth user and user document if client created a portal account
+    if (clientData?.firebaseAuthUid) {
+      try {
+        // Delete from Firebase Auth
+        await adminAuth.deleteUser(clientData.firebaseAuthUid);
+        console.log('✅ Deleted Firebase Auth user:', clientData.firebaseAuthUid);
+      } catch (authError: any) {
+        // Continue even if auth deletion fails (user might already be deleted)
+        console.warn('⚠️ Failed to delete Firebase Auth user:', authError.message);
+      }
+
+      try {
+        // Delete from users collection
+        await adminDb.collection('users').doc(clientData.firebaseAuthUid).delete();
+        console.log('✅ Deleted user document:', clientData.firebaseAuthUid);
+      } catch (userDocError: any) {
+        // Continue even if user doc deletion fails (doc might already be deleted)
+        console.warn('⚠️ Failed to delete user document:', userDocError.message);
+      }
+    }
+
+    // Delete logo from Firebase Storage if it exists
+    if (clientData?.logoUrl) {
+      try {
+        const bucket = adminStorage.bucket();
+
+        // Extract filename from URL
+        // URL format: https://storage.googleapis.com/{bucket}/logos/{filename}
+        const urlParts = clientData.logoUrl.split('/');
+        const filename = urlParts.slice(-2).join('/'); // Gets "logos/{filename}"
+
+        const fileRef = bucket.file(filename);
+        await fileRef.delete();
+        console.log('✅ Deleted logo from storage:', filename);
+      } catch (storageError: any) {
+        // Continue even if storage deletion fails (file might already be deleted)
+        console.warn('⚠️ Failed to delete logo from storage:', storageError.message);
+      }
+    }
+
+    // Delete the client document
+    await adminDb.collection(CLIENTS_COLLECTION).doc(id).delete();
+    console.log('✅ Deleted client document:', id);
+
+    return NextResponse.json({
+      success: true,
+      deletedAuth: !!clientData?.firebaseAuthUid,
+      deletedUserDoc: !!clientData?.firebaseAuthUid,
+      deletedLogo: !!clientData?.logoUrl,
+    });
   } catch (error) {
     console.error('Error deleting client:', error);
     return NextResponse.json(

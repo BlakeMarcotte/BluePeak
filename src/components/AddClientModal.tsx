@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Client } from '@/types';
 
 interface AddClientModalProps {
@@ -8,6 +8,7 @@ interface AddClientModalProps {
   onClose: () => void;
   onClientAdded: (client: Client) => void;
   isQuickAdd?: boolean; // If true, shows minimal fields
+  clientToEdit?: Client; // If provided, modal is in edit mode
 }
 
 export default function AddClientModal({
@@ -15,13 +16,16 @@ export default function AddClientModal({
   onClose,
   onClientAdded,
   isQuickAdd = false,
+  clientToEdit,
 }: AddClientModalProps) {
+  const isEditMode = !!clientToEdit;
+
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    industry: '',
-    phone: '',
+    name: clientToEdit?.name || '',
+    email: clientToEdit?.email || '',
+    company: clientToEdit?.company || '',
+    industry: clientToEdit?.industry || '',
+    phone: clientToEdit?.phone || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,6 +40,27 @@ export default function AddClientModal({
     return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
   };
 
+  // Update form data when clientToEdit changes
+  useEffect(() => {
+    if (clientToEdit) {
+      setFormData({
+        name: clientToEdit.name,
+        email: clientToEdit.email,
+        company: clientToEdit.company,
+        industry: clientToEdit.industry || '',
+        phone: clientToEdit.phone || '',
+      });
+    } else {
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        industry: '',
+        phone: '',
+      });
+    }
+  }, [clientToEdit]);
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setFormData({ ...formData, phone: formatted });
@@ -46,25 +71,56 @@ export default function AddClientModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (isEditMode && clientToEdit) {
+        // Update existing client
+        const response = await fetch('/api/clients', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: clientToEdit.id,
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+            industry: formData.industry || undefined,
+            phone: formData.phone || undefined,
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to update client');
+
+        // Create updated client object
+        const updatedClient: Client = {
+          ...clientToEdit,
           name: formData.name,
           email: formData.email,
           company: formData.company,
           industry: formData.industry || undefined,
           phone: formData.phone || undefined,
-          onboardingStage: 'created',
-          userId: 'demo-user', // In production, get from auth
-        }),
-      });
+          updatedAt: new Date(),
+        };
 
-      if (!response.ok) throw new Error('Failed to create client');
+        onClientAdded(updatedClient);
+      } else {
+        // Create new client
+        const response = await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+            industry: formData.industry || undefined,
+            phone: formData.phone || undefined,
+            onboardingStage: 'created',
+            userId: 'demo-user', // In production, get from auth
+          }),
+        });
 
-      const { client } = await response.json();
+        if (!response.ok) throw new Error('Failed to create client');
 
-      onClientAdded(client);
+        const { client } = await response.json();
+        onClientAdded(client);
+      }
 
       // Reset form
       setFormData({
@@ -77,8 +133,8 @@ export default function AddClientModal({
 
       onClose();
     } catch (error) {
-      console.error('Error adding client:', error);
-      alert('Failed to add client. Please try again.');
+      console.error(`Error ${isEditMode ? 'updating' : 'adding'} client:`, error);
+      alert(`Failed to ${isEditMode ? 'update' : 'add'} client. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +155,7 @@ export default function AddClientModal({
         <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 z-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
-              {isQuickAdd ? 'Quick Add Client' : 'Add New Client'}
+              {isEditMode ? 'Edit Client' : isQuickAdd ? 'Quick Add Client' : 'Add New Client'}
             </h2>
             <button
               onClick={onClose}
@@ -208,7 +264,10 @@ export default function AddClientModal({
                 disabled={isSubmitting}
                 className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting ? 'Adding...' : 'Add Client'}
+                {isSubmitting
+                  ? (isEditMode ? 'Updating...' : 'Adding...')
+                  : (isEditMode ? 'Update Client' : 'Add Client')
+                }
               </button>
             </div>
           </form>

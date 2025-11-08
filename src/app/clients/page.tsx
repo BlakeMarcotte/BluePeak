@@ -31,6 +31,7 @@ const STAGE_COLORS: Record<OnboardingStage, string> = {
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [clientToEdit, setClientToEdit] = useState<Client | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStage, setFilterStage] = useState<OnboardingStage | 'all'>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -61,15 +62,32 @@ export default function ClientsPage() {
     }
   };
 
-  const handleClientAdded = (newClient: Client) => {
+  const handleClientAdded = (client: Client) => {
     // Convert date strings to Date objects
     const clientWithDates = {
-      ...newClient,
-      createdAt: new Date(newClient.createdAt),
-      updatedAt: new Date(newClient.updatedAt),
-      meetingDate: newClient.meetingDate ? new Date(newClient.meetingDate) : undefined,
+      ...client,
+      createdAt: new Date(client.createdAt),
+      updatedAt: new Date(client.updatedAt),
+      meetingDate: client.meetingDate ? new Date(client.meetingDate) : undefined,
     };
-    setClients([clientWithDates, ...clients]);
+
+    if (clientToEdit) {
+      // Update existing client in list
+      setClients(clients.map((c) => (c.id === clientWithDates.id ? clientWithDates : c)));
+    } else {
+      // Add new client to list
+      setClients([clientWithDates, ...clients]);
+    }
+  };
+
+  const handleEditClient = (client: Client) => {
+    setClientToEdit(client);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setClientToEdit(undefined);
   };
 
   const handleViewClient = (client: Client) => {
@@ -80,6 +98,31 @@ export default function ClientsPage() {
       alert(`Discovery link copied to clipboard!\n\n${link}\n\nShare this with ${client.name} to complete their discovery questionnaire.`);
     } else {
       alert('No discovery link available for this client.');
+    }
+  };
+
+  const handleDeleteClient = async (client: Client) => {
+    // Confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${client.name} from ${client.company}?\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`/api/clients?id=${client.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete client');
+
+      // Remove client from local state
+      setClients(clients.filter((c) => c.id !== client.id));
+
+      alert(`${client.name} has been successfully deleted.`);
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      alert('Failed to delete client. Please try again.');
     }
   };
 
@@ -253,8 +296,33 @@ export default function ClientsPage() {
                         >
                           Copy Link
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
-                          Edit
+                        <button
+                          onClick={() => handleEditClient(client)}
+                          className="text-blue-600 hover:text-blue-900 mr-3 inline-flex items-center"
+                          title="Edit client"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClient(client)}
+                          className="text-red-600 hover:text-red-900 inline-flex items-center"
+                          title="Delete client"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
                         </button>
                       </td>
                     </tr>
@@ -268,9 +336,10 @@ export default function ClientsPage() {
 
       <AddClientModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onClientAdded={handleClientAdded}
         isQuickAdd={false}
+        clientToEdit={clientToEdit}
       />
     </ProtectedRoute>
   );
