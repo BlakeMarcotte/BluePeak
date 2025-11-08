@@ -81,6 +81,34 @@ export default function ClientDashboardPage() {
     setShowScheduler(false);
     alert('Meeting confirmed! You will receive a calendar invite shortly.');
   };
+
+  const handleAcceptProposal = async () => {
+    if (!client) return;
+
+    try {
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          onboardingStage: 'proposal_accepted',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to accept proposal');
+
+      // Update local state
+      setClient({
+        ...client,
+        onboardingStage: 'proposal_accepted',
+      });
+
+      alert('🎉 Proposal accepted! We\'re excited to work with you!');
+    } catch (error) {
+      console.error('Error accepting proposal:', error);
+      alert('Failed to accept proposal. Please try again.');
+    }
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -120,13 +148,21 @@ export default function ClientDashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Proposal</span>
-                <span className="text-sm font-medium text-yellow-600">
-                  {client?.onboardingStage === 'proposal_sent' || client?.onboardingStage === 'proposal_accepted' ? '✓ Sent' : 'In Progress'}
+                <span className={`text-sm font-medium ${
+                  client?.onboardingStage === 'proposal_accepted' ? 'text-green-600' :
+                  client?.proposal ? 'text-yellow-600' : 'text-gray-400'
+                }`}>
+                  {client?.onboardingStage === 'proposal_accepted' ? '✓ Accepted' :
+                   client?.proposal ? '✓ Sent' : 'Pending'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Kickoff Meeting</span>
-                <span className="text-sm font-medium text-gray-400">Pending</span>
+                <span className={`text-sm font-medium ${
+                  client?.proposal?.proposalMeetingDate ? 'text-green-600' : 'text-gray-400'
+                }`}>
+                  {client?.proposal?.proposalMeetingDate ? '✓ Scheduled' : 'Pending'}
+                </span>
               </div>
             </div>
           </div>
@@ -214,30 +250,56 @@ export default function ClientDashboardPage() {
                   Schedule Meeting
                 </button>
               </div>
+            ) : client.onboardingStage === 'proposal_accepted' ? (
+              <div className="mt-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <svg className="w-8 h-8 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-xl font-bold text-green-900">🎉 Proposal Accepted!</p>
+                      <p className="text-green-800">Thank you for partnering with BluePeak Marketing!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6">
-                <div className="flex items-center">
-                  <svg className="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-green-900">Meeting Scheduled</p>
-                    <p className="text-green-800">
-                      {new Date(client.proposal.proposalMeetingDate).toLocaleString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        timeZoneName: 'short',
-                      })}
-                    </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <svg className="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-green-900">Meeting Scheduled</p>
+                      <p className="text-green-800 text-sm">
+                        {new Date(client.proposal.proposalMeetingDate).toLocaleString('en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZoneName: 'short',
+                        })}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={handleAcceptProposal}
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
+                  >
+                    Accept Proposal
+                  </button>
                 </div>
               </div>
             )}
