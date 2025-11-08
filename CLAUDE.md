@@ -5,12 +5,14 @@ BluePeak Marketing is a hackathon project built for the Claude Hackathon Challen
 
 **Hackathon Focus**: Problem Area 3 - Client Onboarding & Communication
 
+**New in v2.0**: Full customer portal with authentication, allowing clients to create accounts, view proposals, and access their marketing materials after completing discovery.
+
 ## Tech Stack
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS 4
-- **AI**: Anthropic Claude API (Claude 3 Sonnet)
+- **AI**: Anthropic Claude API (Claude 3.5 Haiku for discovery, Claude 3 Sonnet for generation)
 - **Database**: Firebase Firestore (via Firebase Admin SDK)
-- **Authentication**: Firebase Auth
+- **Authentication**: Firebase Auth (for both internal team and client portal)
 
 ## Key Features
 
@@ -27,18 +29,41 @@ BluePeak Marketing is a hackathon project built for the Claude Hackathon Challen
 - Quick "Add Client" modal
 - Progress Reports tab with AI report generator
 
-### 3. Client Portal (`/portal/[linkId]`)
-- Public-facing discovery questionnaire
-- AI-powered conversation with Claude
-- Unique link per client (no login required)
-- Completion screen with next steps
+### 3. Client Portal Discovery (`/portal/[linkId]`)
+- **Smart Discovery Flow**:
+  - First visit: AI-powered conversation with Claude 3.5 Haiku
+  - Already completed: Shows account creation or login options
+  - Prevents re-filling questionnaire
+- **Account Creation**:
+  - Post-discovery signup prompt
+  - Email pre-filled from client record
+  - Password validation (min 6 characters)
+  - Creates Firebase Auth user linked to client
+- **Status Detection**:
+  - Checks if discovery already complete via linkId
+  - Detects existing account to show appropriate UI
+  - Loading state during status check
 
-### 4. Marketing Content Generator (`/marketing`)
+### 4. Customer Portal (`/client-portal/*`)
+- **Login** (`/client-portal/login`):
+  - Email/password authentication
+  - Success message after account creation
+  - Error handling for invalid credentials
+- **Dashboard** (`/client-portal/dashboard`):
+  - Protected route requiring authentication
+  - Onboarding status card (discovery, proposal, kickoff)
+  - Company information display
+  - Quick actions (view proposal, content library, analytics)
+  - Proposal section with "In Progress" placeholder
+  - Content library placeholder for marketing materials
+  - Logout functionality
+
+### 5. Marketing Content Generator (`/marketing`)
 - Multi-channel content creation
 - Brand analysis from logos/screenshots
 - AI-generated content for blog, social, email, ads
 
-### 5. Progress Report Generator
+### 6. Progress Report Generator
 - Transform raw data into professional narratives
 - Three tone options: Formal, Casual, Detailed
 - Copy to clipboard functionality
@@ -49,35 +74,42 @@ BluePeak Marketing is a hackathon project built for the Claude Hackathon Challen
 src/
 ├── app/
 │   ├── api/
-│   │   ├── clients/          # Client CRUD endpoints
-│   │   ├── discovery-chat/   # AI discovery conversation
-│   │   ├── generate-proposal/ # Proposal generation
-│   │   ├── generate-report/  # Progress report generation
-│   │   ├── analyze-brand/    # Brand analysis
-│   │   └── generate-content/ # Marketing content
-│   ├── clients/              # Client management page
-│   ├── client-onboarding/    # Pipeline management
-│   ├── portal/[linkId]/      # Client-facing portal
-│   ├── marketing/            # Content generation
-│   ├── dashboard/            # Main dashboard
-│   ├── login/                # Auth pages
-│   └── signup/
+│   │   ├── clients/            # Client CRUD endpoints
+│   │   │   └── [id]/route.ts   # Fetch individual client (by ID or linkId)
+│   │   ├── client-auth/        # Customer portal authentication
+│   │   │   ├── signup/         # Account creation after discovery
+│   │   │   └── profile/        # Fetch client by Firebase Auth UID
+│   │   ├── discovery-chat/     # AI discovery conversation (Claude 3.5 Haiku)
+│   │   ├── generate-proposal/  # Proposal generation
+│   │   ├── generate-report/    # Progress report generation
+│   │   ├── analyze-brand/      # Brand analysis
+│   │   └── generate-content/   # Marketing content
+│   ├── clients/                # Internal: Client management page
+│   ├── client-onboarding/      # Internal: Pipeline management
+│   ├── client-portal/          # Customer-facing portal (authenticated)
+│   │   ├── login/              # Client login
+│   │   └── dashboard/          # Client dashboard
+│   ├── portal/[linkId]/        # Public discovery questionnaire
+│   ├── marketing/              # Internal: Content generation
+│   ├── dashboard/              # Internal: Main dashboard
+│   ├── login/                  # Internal team auth
+│   └── signup/                 # Internal team auth
 ├── components/
-│   ├── AddClientModal.tsx    # Client creation modal
-│   ├── DiscoveryChat.tsx     # AI chat interface
-│   ├── OnboardingPipeline.tsx # Progress tracker
-│   ├── ProposalDisplay.tsx   # Proposal viewer
+│   ├── AddClientModal.tsx      # Client creation modal
+│   ├── DiscoveryChat.tsx       # AI chat interface
+│   ├── OnboardingPipeline.tsx  # Progress tracker
+│   ├── ProposalDisplay.tsx     # Proposal viewer
 │   ├── ProgressReportGenerator.tsx
-│   ├── CampaignForm.tsx      # Marketing campaign form
+│   ├── CampaignForm.tsx        # Marketing campaign form
 │   ├── Navbar.tsx
 │   └── ProtectedRoute.tsx
 ├── lib/
-│   ├── firebase.ts           # Client-side Firebase
-│   └── firebaseAdmin.ts      # Server-side Firebase Admin
+│   ├── firebase.ts             # Client-side Firebase
+│   └── firebaseAdmin.ts        # Server-side Firebase Admin
 ├── types/
-│   └── index.ts              # TypeScript definitions
+│   └── index.ts                # TypeScript definitions
 └── contexts/
-    └── AuthContext.tsx       # Authentication context
+    └── AuthContext.tsx         # Authentication context (internal team)
 ```
 
 ## Important Implementation Details
@@ -99,10 +131,44 @@ All modals use:
 - Visible input text: `text-gray-900`
 - Light placeholder text: `placeholder:text-gray-400`
 
-### Discovery Chat
+### Discovery Chat & Customer Portal Flow
+
+**Discovery Chat**:
+- Uses Claude 3.5 Haiku model: `claude-3-5-haiku-20241022`
 - Initial assistant message is filtered out before sending to API (Anthropic requires user-first)
-- Uses Claude 3 Sonnet model: `claude-3-sonnet-20240229`
-- System prompt guides conversation to gather client info
+- System prompt guides conversation to gather 8 key pieces of information
+- Completion detected via specific phrases in Claude's response:
+  - "that's everything we need"
+  - "get back to you shortly"
+  - "our team at bluepeak will review"
+
+**Smart Portal Flow**:
+```
+1. Client receives discovery link: /portal/[linkId]
+2. On first visit:
+   - Shows discovery chat interface
+   - Completes questionnaire
+   - Data saved to Firebase (discoveryData, conversationHistory)
+   - onboardingStage → 'discovery_complete'
+3. On revisit (same link):
+   - Checks client.onboardingStage via linkId
+   - If discovery complete: Shows account creation prompt
+   - If has account: Shows login redirect
+4. Account creation:
+   - Email pre-filled from client record
+   - Creates Firebase Auth user
+   - Links via firebaseAuthUid
+   - Sets hasAccount = true
+5. Login & Dashboard:
+   - Authenticates with Firebase Auth
+   - Fetches client data via UID
+   - Shows personalized dashboard
+```
+
+**Authentication Architecture**:
+- Internal team: `/login`, `/signup` → Uses AuthContext
+- Clients: `/client-portal/login` → Uses Firebase Auth directly
+- Client record links: `firebaseAuthUid` field connects Auth user to Client document
 
 ### Firebase Collections
 
@@ -116,14 +182,20 @@ All modals use:
   industry?: string
   phone?: string
   onboardingStage: OnboardingStage
-  discoveryLinkId: string (unique portal link)
-  discoveryData?: DiscoveryData
-  conversationHistory?: DiscoveryMessage[]
+  discoveryLinkId: string            // Unique portal link (e.g., "anm66g")
+  discoveryData?: DiscoveryData      // Extracted structured data
+  conversationHistory?: DiscoveryMessage[]  // Full chat transcript
+  proposal?: ClientProposal          // Generated proposal
   proposalId?: string
   meetingDate?: Date
   createdAt: Date
   updatedAt: Date
-  userId: string
+  userId: string                     // BluePeak team member who created
+
+  // Customer Portal Auth Fields (v2.0)
+  hasAccount: boolean                // Has client created portal account?
+  firebaseAuthUid?: string           // Firebase Auth UID (links to Auth user)
+  accountCreatedAt?: Date            // When portal account was created
 }
 ```
 
@@ -171,13 +243,37 @@ text-gray-900 placeholder:text-gray-400
 ## Known Issues & Workarounds
 
 ### Model Version Compatibility
+Current models in use:
+- **Discovery Chat**: `claude-3-5-haiku-20241022` (Claude 3.5 Haiku - fast, cost-effective)
+- **Proposal/Report Generation**: `claude-3-sonnet-20240229` (Claude 3 Sonnet - more capable)
+
 If you get "model not found" errors:
-- Try `claude-3-sonnet-20240229` (stable Claude 3 Sonnet)
-- Check if API key has access to Claude 3.5 models
+- Haiku alternative: `claude-3-haiku-20240307`
+- Sonnet alternative: `claude-3-5-sonnet-20240620`
+- Check API key has access to desired models
 - Verify Anthropic SDK version: `@anthropic-ai/sdk@0.68.0`
+
+### Next.js 16 - useSearchParams Requirement
+Components using `useSearchParams()` must be wrapped in `<Suspense>`:
+```typescript
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ComponentUsingSearchParams />
+    </Suspense>
+  );
+}
+```
+See: `/client-portal/login/page.tsx` for implementation example
 
 ### Date Serialization
 Firebase Admin converts Dates to Firestore Timestamps, which serialize to strings in JSON. Always convert back to Date objects on the client.
+
+### Account Creation Errors
+If client sees "Email already exists" but hasn't created account:
+- Check if email is already registered in Firebase Auth console
+- Client may have started signup but not completed
+- Admin can delete the Firebase Auth user to allow re-registration
 
 ## Testing the App
 
@@ -185,16 +281,50 @@ Firebase Admin converts Dates to Firestore Timestamps, which serialize to string
    - Go to `/clients` or `/client-onboarding`
    - Click "Add Client"
    - Fill form with auto-formatted phone
-   - Client saves to Firebase
+   - Client saves to Firebase with `hasAccount: false`
    - Appears on both pages
 
-2. **Onboarding Pipeline**:
-   - Create client → "Send Discovery Link"
-   - Copy portal URL
-   - Open in incognito: `/portal/[linkId]`
-   - Complete AI chat
-   - Return to onboarding page
-   - Progress through stages
+2. **Full Onboarding Pipeline with Customer Portal**:
+   ```
+   Step 1: Create Client
+   - `/client-onboarding` → "Add Client"
+   - Fill: name, email, company, industry
+   - Client created with unique discoveryLinkId
+
+   Step 2: Send Discovery Link
+   - Click "Send Discovery Link" button
+   - Copy URL: /portal/[linkId]
+   - Link copied to clipboard
+   - Client stage: 'created' → 'discovery_sent'
+
+   Step 3: Client Completes Discovery
+   - Open link in incognito window
+   - AI chat interface appears (Claude 3.5 Haiku)
+   - Answer ~7-10 questions
+   - Chat detects completion automatically
+   - Data saved to Firebase
+   - Client stage: 'discovery_sent' → 'discovery_complete'
+
+   Step 4: Client Creates Account
+   - After discovery: "Create Free Account" button appears
+   - Click button → Signup form
+   - Email pre-filled (from client record)
+   - Enter password (min 6 chars)
+   - Account created in Firebase Auth
+   - Client record updated: hasAccount = true, firebaseAuthUid set
+   - Redirect to /client-portal/login
+
+   Step 5: Client Logs In
+   - Enter email/password
+   - Success: Redirect to /client-portal/dashboard
+   - See onboarding status, company info, proposal placeholder
+
+   Step 6: Revisit Discovery Link
+   - Open /portal/[linkId] again
+   - Shows "Discovery Complete!" screen
+   - Options: "Go to Login" (if has account) or "Create Account"
+   - Never shows chat interface again
+   ```
 
 3. **Progress Reports**:
    - Go to "Progress Reports" tab
@@ -202,6 +332,53 @@ Firebase Admin converts Dates to Firestore Timestamps, which serialize to string
    - Select tone
    - Generate report with Claude
    - Copy to clipboard
+
+## API Routes Reference
+
+### Client Management
+- `GET /api/clients` - Fetch all clients (optional userId filter)
+- `POST /api/clients` - Create new client
+- `PUT /api/clients` - Update existing client
+- `DELETE /api/clients` - Delete client
+- `GET /api/clients/[id]` - Fetch individual client
+  - By ID: `/api/clients/abc123`
+  - By linkId: `/api/clients/anm66g?byLinkId=true`
+
+### Customer Portal Authentication
+- `POST /api/client-auth/signup`
+  - Creates Firebase Auth user
+  - Links to Client record via firebaseAuthUid
+  - Validates email matches client record
+  - Prevents duplicate accounts
+  - **Body**: `{ email, password, linkId }`
+  - **Returns**: `{ success, uid }`
+
+- `GET /api/client-auth/profile?uid=[firebaseAuthUid]`
+  - Fetches client data by Firebase Auth UID
+  - Used by client dashboard after login
+  - Converts Firebase Timestamps to Date objects
+  - **Returns**: `{ client: Client }`
+
+### AI Endpoints
+- `POST /api/discovery-chat`
+  - AI-powered discovery conversation
+  - Model: Claude 3.5 Haiku
+  - **Body**: `{ messages: Array<{role, content}> }`
+  - **Returns**: `{ message: string, isComplete: boolean }`
+
+- `POST /api/generate-proposal`
+  - Generate proposal from discovery data
+  - Model: Claude 3 Sonnet
+  - **Body**: `{ clientName, discoveryData }`
+
+- `POST /api/generate-report`
+  - Generate progress report
+  - Model: Claude 3 Sonnet
+  - **Body**: `{ reportData, tone }`
+
+### Marketing Content
+- `POST /api/analyze-brand` - Extract brand info from images
+- `POST /api/generate-content` - Create multi-channel content
 
 ## Deployment Notes
 
@@ -223,7 +400,50 @@ Firebase Admin converts Dates to Firestore Timestamps, which serialize to string
 - Consistent quality across all proposals
 - Never miss important client information
 
-**Client Experience**:
-- Faster response times
-- More professional, polished materials
-- More frequent, higher-quality communication
+**Client Experience** (v2.0 Enhancement):
+- **Self-service portal**: 24/7 access to proposals and marketing materials
+- **Faster response times**: Discovery → Account → Proposal in hours, not days
+- **Transparency**: Real-time onboarding status visibility
+- **Professional experience**: Modern, branded portal interface
+- **Ownership**: Clients have their own dashboard with all materials in one place
+
+## v2.0 Updates - Customer Portal
+
+**What's New**:
+1. ✅ **Customer Authentication System**
+   - Post-discovery account creation
+   - Firebase Auth integration
+   - Secure password-based login
+   - Email validation against client records
+
+2. ✅ **Smart Discovery Link Behavior**
+   - Detects if questionnaire already completed
+   - Shows account creation prompt for completed discoveries
+   - Prevents duplicate submissions
+   - Seamless account creation flow
+
+3. ✅ **Client Dashboard**
+   - Onboarding progress tracking
+   - Company information display
+   - Proposal viewing (ready for generation)
+   - Content library placeholder
+   - Analytics access (coming soon)
+
+4. ✅ **Enhanced Discovery Chat**
+   - Upgraded to Claude 3.5 Haiku (faster, more cost-effective)
+   - Improved completion detection
+   - Better messaging about next steps
+   - Full conversation history saved
+
+**Technical Achievements**:
+- Next.js 16 compatibility (Suspense boundaries)
+- Firebase Auth + Firestore integration
+- Secure authentication flow
+- Smart state detection and conditional rendering
+- Responsive, modern UI with Tailwind CSS 4
+
+**What's Next** (Pending):
+- [ ] Proposal generation from discovery data
+- [ ] Content library population
+- [ ] Analytics dashboard
+- [ ] Email notifications for status changes

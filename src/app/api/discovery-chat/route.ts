@@ -23,9 +23,9 @@ Guidelines:
 - Listen to their responses and ask intelligent follow-up questions
 - If they mention a challenge, dig deeper to understand the root cause
 - Keep responses concise and professional
-- Once you have gathered sufficient information (around 7-10 exchanges), let them know you have everything needed to create their proposal and thank them
+- Once you have gathered sufficient information (around 7-10 exchanges), let them know you have everything needed and that the BluePeak team will be in touch
 
-IMPORTANT: Structure your responses naturally. When you've gathered enough information, end with a clear signal like "That's all the information I need! I'll now prepare a customized proposal for you."`;
+IMPORTANT: When you've gathered enough information, end with a message like "Thank you so much for sharing all of this information! That's everything we need to get started. Our team at BluePeak will review your responses and get back to you shortly with a customized proposal tailored to your needs."`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }));
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 1024,
       system: DISCOVERY_SYSTEM_PROMPT,
       messages: anthropicMessages,
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: assistantMessage,
-      isComplete: assistantMessage.toLowerCase().includes("that's all the information i need") ||
-                  assistantMessage.toLowerCase().includes("i'll now prepare") ||
-                  assistantMessage.toLowerCase().includes("ready to create your proposal"),
+      isComplete: assistantMessage.toLowerCase().includes("that's everything we need") ||
+                  assistantMessage.toLowerCase().includes("get back to you shortly") ||
+                  assistantMessage.toLowerCase().includes("our team at bluepeak will review"),
     });
   } catch (error) {
     console.error('Discovery chat error:', error);
