@@ -40,11 +40,8 @@ export default function ClientOnboardingPage() {
         updatedAt: new Date(client.updatedAt),
         meetingDate: client.meetingDate ? new Date(client.meetingDate) : undefined,
       }));
-      // Filter for clients not yet completed
-      const activeClients = clientsWithDates.filter(
-        (c: Client) => c.onboardingStage !== 'completed' && c.onboardingStage !== 'proposal_accepted'
-      );
-      setClients(activeClients);
+      // Show all clients in the onboarding pipeline (including accepted ones)
+      setClients(clientsWithDates);
     } catch (error) {
       console.error('Error fetching clients:', error);
     } finally {
