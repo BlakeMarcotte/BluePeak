@@ -105,6 +105,7 @@ export interface Client {
   discoveryLinkId?: string; // Unique ID for client portal access
   discoveryData?: DiscoveryData;
   conversationHistory?: DiscoveryMessage[];
+  logoUrl?: string; // Company logo uploaded during discovery
   proposalId?: string;
   proposal?: ClientProposal;
   meetingDate?: Date;

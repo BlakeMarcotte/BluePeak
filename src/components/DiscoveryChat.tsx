@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { DiscoveryMessage, DiscoveryData } from '@/types';
 
 interface DiscoveryChatProps {
-  onComplete: (data: DiscoveryData, messages: DiscoveryMessage[]) => void;
+  onComplete: (data: DiscoveryData, messages: DiscoveryMessage[], logoUrl?: string) => void;
 }
 
 export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
@@ -12,14 +12,19 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     {
       id: '1',
       role: 'assistant',
-      content: "Hi! I'm here to learn about your business and marketing needs. Let's start with the basics - what's your company name?",
+      content: "Hi! I'm here to learn about your business and marketing needs. Let's start - what are your main marketing goals right now?",
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [showLogoUpload, setShowLogoUpload] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,23 +35,9 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   }, [messages]);
 
   const extractDiscoveryData = (msgs: DiscoveryMessage[]): DiscoveryData => {
-    const conversation = msgs.map(m => `${m.role}: ${m.content}`).join('\n');
-
-    // Simple extraction logic - in production, you'd use Claude to extract structured data
-    const data: DiscoveryData = {};
-
-    // Extract company name (usually in first user response)
-    const companyMatch = conversation.match(/user:\s*([A-Z][a-zA-Z\s&]+)(?:\n|$)/);
-    if (companyMatch) data.companyName = companyMatch[1].trim();
-
-    // Look for industry mentions
-    const industryKeywords = ['industry', 'sector', 'field', 'business'];
-    const industryMsg = msgs.find(m =>
-      m.role === 'user' && industryKeywords.some(k => m.content.toLowerCase().includes(k))
-    );
-    if (industryMsg) data.industry = industryMsg.content;
-
-    return data;
+    // No extraction needed - we'll use the full conversation history
+    // Claude can extract what it needs when generating proposals
+    return {};
   };
 
   const handleSend = async () => {
@@ -96,9 +87,9 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
 
       if (data.isComplete) {
         setIsComplete(true);
-        const discoveryData = extractDiscoveryData(finalMessages);
+        // Show logo upload UI instead of immediately completing
         setTimeout(() => {
-          onComplete(discoveryData, finalMessages);
+          setShowLogoUpload(true);
         }, 1000);
       }
     } catch (error) {
@@ -115,11 +106,66 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setUploadError('Please select an image file');
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setUploadError('File size must be less than 5MB');
+        return;
+      }
+      setSelectedFile(file);
+      setUploadError('');
+    }
+  };
+
+  const handleLogoUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    setUploadError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('logo', selectedFile);
+
+      const response = await fetch('/api/upload-logo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload logo');
+      }
+
+      const { logoUrl } = await response.json();
+
+      // Complete discovery with logo URL
+      const discoveryData = extractDiscoveryData(messages);
+      onComplete(discoveryData, messages, logoUrl);
+    } catch (error) {
+      console.error('Logo upload error:', error);
+      setUploadError('Failed to upload logo. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSkipLogo = () => {
+    const discoveryData = extractDiscoveryData(messages);
+    onComplete(discoveryData, messages);
   };
 
   return (
@@ -177,6 +223,67 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
           </div>
         )}
 
+        {showLogoUpload && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mt-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              One Last Thing - Upload Your Logo
+            </h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Please upload your company logo so we can include it in your proposal and marketing materials.
+            </p>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Choose File
+                </button>
+                {selectedFile && (
+                  <span className="text-sm text-gray-600">
+                    {selectedFile.name}
+                  </span>
+                )}
+              </div>
+
+              {uploadError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-2 text-sm">
+                  {uploadError}
+                </div>
+              )}
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleLogoUpload}
+                  disabled={!selectedFile || isUploading}
+                  className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isUploading ? 'Uploading...' : 'Upload Logo'}
+                </button>
+                <button
+                  onClick={handleSkipLogo}
+                  disabled={isUploading}
+                  className="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Skip for now
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-500">
+                Accepted formats: JPG, PNG, SVG (max 5MB)
+              </p>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -187,7 +294,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             disabled={isLoading || isComplete}
             placeholder="Type your message..."
             className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900 placeholder:text-gray-400"
