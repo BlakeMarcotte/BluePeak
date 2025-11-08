@@ -139,7 +139,9 @@ export async function saveGeneratedContent(
 export async function updateGeneratedContent(
   campaignId: string,
   contentId: string,
-  updatedContent: string
+  updatedContent: string,
+  updatedName?: string,
+  pdfData?: any
 ): Promise<void> {
   try {
     const campaignRef = doc(db, 'campaigns', campaignId);
@@ -154,12 +156,20 @@ export async function updateGeneratedContent(
     // Find and update the specific content
     const updatedContents = existingContents.map((content: any) => {
       if (content.id === contentId) {
-        return {
+        const updated = {
           ...content,
           content: updatedContent,
+          name: updatedName || content.name,
           wordCount: updatedContent.split(/\s+/).length,
           characterCount: updatedContent.length,
         };
+
+        // Add pdfData if provided
+        if (pdfData) {
+          updated.pdfData = pdfData;
+        }
+
+        return updated;
       }
       return content;
     });

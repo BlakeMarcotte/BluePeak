@@ -25,17 +25,22 @@ export default function CampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<ContentType>('blog');
+  const [contentName, setContentName] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate>('modern-minimal');
 
   // Editing state
   const [editingContentId, setEditingContentId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
+  const [editedName, setEditedName] = useState('');
   const [refinementNotes, setRefinementNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [refining, setRefining] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
+  const [editingPdfId, setEditingPdfId] = useState<string | null>(null);
+  const [editedPdfData, setEditedPdfData] = useState<any>(null);
+  const [savingPdf, setSavingPdf] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -103,6 +108,7 @@ export default function CampaignDetailPage() {
 
       const newContent: GeneratedContent = {
         type: activeTab,
+        name: contentName.trim() || undefined,
         content,
         wordCount,
         characterCount,
@@ -116,7 +122,8 @@ export default function CampaignDetailPage() {
       // Reload campaign to get updated content
       await loadCampaign();
 
-      // Clear notes after successful generation
+      // Clear form fields after successful generation
+      setContentName('');
       setNotes('');
     } catch (error) {
       console.error('Error generating content:', error);
@@ -131,15 +138,17 @@ export default function CampaignDetailPage() {
     alert('Copied to clipboard!');
   };
 
-  const startEditing = (contentId: string, content: string) => {
+  const startEditing = (contentId: string, content: string, name?: string) => {
     setEditingContentId(contentId);
     setEditedContent(content);
+    setEditedName(name || '');
     setRefinementNotes('');
   };
 
   const cancelEditing = () => {
     setEditingContentId(null);
     setEditedContent('');
+    setEditedName('');
     setRefinementNotes('');
   };
 
@@ -148,10 +157,11 @@ export default function CampaignDetailPage() {
 
     setSaving(true);
     try {
-      await updateGeneratedContent(campaign.id!, contentId, editedContent);
+      await updateGeneratedContent(campaign.id!, contentId, editedContent, editedName);
       await loadCampaign();
       setEditingContentId(null);
       setEditedContent('');
+      setEditedName('');
       setRefinementNotes('');
     } catch (error) {
       console.error('Error saving edit:', error);
@@ -193,7 +203,7 @@ export default function CampaignDetailPage() {
     }
   };
 
-  const downloadPDF = async (pdfData: any) => {
+  const downloadPDF = async (pdfData: any, contentName?: string) => {
     if (!campaign) return;
 
     setDownloadingPdf(true);
@@ -217,8 +227,14 @@ export default function CampaignDetailPage() {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+
+      // Use content name if provided, otherwise use client name
+      const filename = contentName
+        ? `${contentName.replace(/[^a-z0-9]/gi, '_')}.pdf`
+        : `${campaign.clientName.replace(/[^a-z0-9]/gi, '_')}_OnePager.pdf`;
+
       a.href = url;
-      a.download = `${campaign.clientName.replace(/[^a-z0-9]/gi, '_')}_OnePager.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -247,6 +263,77 @@ export default function CampaignDetailPage() {
       alert('Failed to delete content. Please try again.');
     } finally {
       setDeletingContentId(null);
+    }
+  };
+
+  const startEditingPdf = (contentId: string, pdfData: any) => {
+    setEditingPdfId(contentId);
+    setEditedPdfData({ ...pdfData });
+  };
+
+  const cancelEditingPdf = () => {
+    setEditingPdfId(null);
+    setEditedPdfData(null);
+  };
+
+  const updatePdfField = (field: string, value: any) => {
+    setEditedPdfData((prev: any) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const updatePdfStat = (index: number, field: string, value: string) => {
+    setEditedPdfData((prev: any) => {
+      const newStats = [...(prev.stats || [])];
+      newStats[index] = { ...newStats[index], [field]: value };
+      return { ...prev, stats: newStats };
+    });
+  };
+
+  const updatePdfBenefit = (index: number, value: string) => {
+    setEditedPdfData((prev: any) => {
+      const newBenefits = [...(prev.keyBenefits || [])];
+      newBenefits[index] = value;
+      return { ...prev, keyBenefits: newBenefits };
+    });
+  };
+
+  const updatePdfContact = (field: string, value: string) => {
+    setEditedPdfData((prev: any) => ({
+      ...prev,
+      contactInfo: {
+        ...prev.contactInfo,
+        [field]: value
+      }
+    }));
+  };
+
+  const savePdfEdit = async (contentId: string) => {
+    if (!campaign || !editedPdfData) return;
+
+    setSavingPdf(true);
+    try {
+      // Update the content with the new PDF data
+      const content = campaign.contents.find(c => c.id === contentId);
+      if (!content) throw new Error('Content not found');
+
+      await updateGeneratedContent(
+        campaign.id!,
+        contentId,
+        content.content,
+        content.name,
+        editedPdfData
+      );
+
+      await loadCampaign();
+      setEditingPdfId(null);
+      setEditedPdfData(null);
+    } catch (error) {
+      console.error('Error saving PDF edit:', error);
+      alert('Failed to save PDF changes. Please try again.');
+    } finally {
+      setSavingPdf(false);
     }
   };
 
@@ -332,6 +419,24 @@ export default function CampaignDetailPage() {
                 <p className="text-sm text-slate-600">{activeContentType?.description}</p>
               </div>
 
+              {/* Content Name Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Content Name <span className="text-slate-500 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contentName}
+                  onChange={(e) => setContentName(e.target.value)}
+                  placeholder={`e.g., "Summer Campaign ${activeContentType?.label}" or "Q4 Launch Material"`}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  disabled={generating}
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Give this content a custom name to easily identify it later
+                </p>
+              </div>
+
               {/* Template Selector - Only for PDF One-Pager */}
               {activeTab === 'pdf-onepager' && (
                 <div className="mb-4">
@@ -402,7 +507,12 @@ export default function CampaignDetailPage() {
                   return (
                     <div key={item.id || index} className="bg-white border border-slate-200 rounded-lg p-6">
                       <div className="flex justify-between items-start mb-4">
-                        <div>
+                        <div className="flex-1">
+                          {item.name && (
+                            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                              {item.name}
+                            </h3>
+                          )}
                           <p className="text-sm text-slate-500">
                             {item.wordCount && `${item.wordCount} words`}
                             {item.characterCount && ` • ${item.characterCount} characters`}
@@ -417,7 +527,7 @@ export default function CampaignDetailPage() {
                             {activeTab === 'pdf-onepager' && item.pdfData && (
                               <>
                                 <button
-                                  onClick={() => downloadPDF(item.pdfData)}
+                                  onClick={() => downloadPDF(item.pdfData, item.name)}
                                   disabled={downloadingPdf || deletingContentId === item.id}
                                   className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
@@ -429,6 +539,13 @@ export default function CampaignDetailPage() {
                                   ) : (
                                     'Download PDF'
                                   )}
+                                </button>
+                                <button
+                                  onClick={() => startEditingPdf(item.id!, item.pdfData)}
+                                  disabled={downloadingPdf || deletingContentId === item.id}
+                                  className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Edit PDF Content
                                 </button>
                                 <button
                                   onClick={() => handleDeleteContent(item.id!)}
@@ -443,7 +560,7 @@ export default function CampaignDetailPage() {
                             {activeTab !== 'pdf-onepager' && (
                               <>
                                 <button
-                                  onClick={() => startEditing(item.id!, item.content)}
+                                  onClick={() => startEditing(item.id!, item.content, item.name)}
                                   disabled={deletingContentId === item.id}
                                   className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -472,6 +589,21 @@ export default function CampaignDetailPage() {
                       {isEditing ? (
                         /* Editing Mode */
                         <div>
+                          {/* Name Input */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Content Name <span className="text-slate-500 font-normal">(Optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={editedName}
+                              onChange={(e) => setEditedName(e.target.value)}
+                              placeholder="Give this content a name..."
+                              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              disabled={saving || refining}
+                            />
+                          </div>
+
                           {/* AI Refinement Section */}
                           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
                             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -624,6 +756,234 @@ export default function CampaignDetailPage() {
             )}
           </div>
         </main>
+
+        {/* PDF Edit Modal */}
+        {editingPdfId && editedPdfData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
+                <h2 className="text-xl font-bold text-slate-900">Edit PDF Content</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  Edit your PDF content below. Character limits help maintain proper layout.
+                </p>
+              </div>
+
+              {/* Modal Body */}
+              <div className="px-6 py-4 space-y-6">
+                {/* Headline */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Headline <span className="text-xs text-slate-500">({editedPdfData.headline?.length || 0}/60 characters)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editedPdfData.headline || ''}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 60) {
+                        updatePdfField('headline', e.target.value);
+                      }
+                    }}
+                    maxLength={60}
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                      (editedPdfData.headline?.length || 0) > 55 ? 'border-yellow-500' : 'border-slate-300'
+                    }`}
+                    placeholder="Enter headline..."
+                  />
+                  {(editedPdfData.headline?.length || 0) > 55 && (
+                    <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                  )}
+                </div>
+
+                {/* Subheadline */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Subheadline <span className="text-xs text-slate-500">({editedPdfData.subheadline?.length || 0}/120 characters)</span>
+                  </label>
+                  <textarea
+                    value={editedPdfData.subheadline || ''}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 120) {
+                        updatePdfField('subheadline', e.target.value);
+                      }
+                    }}
+                    maxLength={120}
+                    rows={2}
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                      (editedPdfData.subheadline?.length || 0) > 110 ? 'border-yellow-500' : 'border-slate-300'
+                    }`}
+                    placeholder="Enter subheadline..."
+                  />
+                  {(editedPdfData.subheadline?.length || 0) > 110 && (
+                    <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                  )}
+                </div>
+
+                {/* Stats */}
+                {editedPdfData.stats && editedPdfData.stats.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-700 mb-3">Stats</h3>
+                    <div className="space-y-3">
+                      {editedPdfData.stats.map((stat: any, idx: number) => (
+                        <div key={idx} className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                              Value <span className="text-slate-500">({stat.value?.length || 0}/10)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={stat.value || ''}
+                              onChange={(e) => {
+                                if (e.target.value.length <= 10) {
+                                  updatePdfStat(idx, 'value', e.target.value);
+                                }
+                              }}
+                              maxLength={10}
+                              className="w-full px-2 py-1.5 border border-slate-300 rounded text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                              placeholder="e.g., 250+"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                              Label <span className="text-slate-500">({stat.label?.length || 0}/30)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={stat.label || ''}
+                              onChange={(e) => {
+                                if (e.target.value.length <= 30) {
+                                  updatePdfStat(idx, 'label', e.target.value);
+                                }
+                              }}
+                              maxLength={30}
+                              className="w-full px-2 py-1.5 border border-slate-300 rounded text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                              placeholder="e.g., Active Users"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Key Benefits */}
+                {editedPdfData.keyBenefits && editedPdfData.keyBenefits.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-700 mb-3">Key Benefits</h3>
+                    <div className="space-y-3">
+                      {editedPdfData.keyBenefits.map((benefit: string, idx: number) => (
+                        <div key={idx}>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Benefit {idx + 1} <span className="text-slate-500">({benefit?.length || 0}/150 characters)</span>
+                          </label>
+                          <textarea
+                            value={benefit || ''}
+                            onChange={(e) => {
+                              if (e.target.value.length <= 150) {
+                                updatePdfBenefit(idx, e.target.value);
+                              }
+                            }}
+                            maxLength={150}
+                            rows={2}
+                            className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm ${
+                              (benefit?.length || 0) > 140 ? 'border-yellow-500' : 'border-slate-300'
+                            }`}
+                            placeholder="Enter benefit..."
+                          />
+                          {(benefit?.length || 0) > 140 && (
+                            <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Call to Action */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Call to Action <span className="text-xs text-slate-500">({editedPdfData.callToAction?.length || 0}/80 characters)</span>
+                  </label>
+                  <textarea
+                    value={editedPdfData.callToAction || ''}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 80) {
+                        updatePdfField('callToAction', e.target.value);
+                      }
+                    }}
+                    maxLength={80}
+                    rows={2}
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                      (editedPdfData.callToAction?.length || 0) > 75 ? 'border-yellow-500' : 'border-slate-300'
+                    }`}
+                    placeholder="Enter call to action..."
+                  />
+                  {(editedPdfData.callToAction?.length || 0) > 75 && (
+                    <p className="text-xs text-yellow-600 mt-1">Approaching character limit</p>
+                  )}
+                </div>
+
+                {/* Contact Info */}
+                <div>
+                  <h3 className="text-sm font-medium text-slate-700 mb-3">Contact Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={editedPdfData.contactInfo?.email || ''}
+                        onChange={(e) => updatePdfContact('email', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        placeholder="contact@example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={editedPdfData.contactInfo?.phone || ''}
+                        onChange={(e) => updatePdfContact('phone', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Website</label>
+                      <input
+                        type="url"
+                        value={editedPdfData.contactInfo?.website || ''}
+                        onChange={(e) => updatePdfContact('website', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        placeholder="www.example.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+                <button
+                  onClick={cancelEditingPdf}
+                  disabled={savingPdf}
+                  className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => savePdfEdit(editingPdfId)}
+                  disabled={savingPdf}
+                  className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {savingPdf && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  )}
+                  {savingPdf ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );

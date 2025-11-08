@@ -18,6 +18,7 @@ export interface CampaignFormData {
 
 export interface GeneratedContent {
   id?: string;
+  name?: string; // Custom name for the content piece
   type: ContentType;
   content: string;
   wordCount?: number;

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Client } from '@/types';
+import ClientPortalNav from '@/components/ClientPortalNav';
 
 export default function ClientDashboardPage() {
   const router = useRouter();
@@ -40,11 +41,6 @@ export default function ClientDashboardPage() {
     return () => unsubscribe();
   }, [router]);
 
-  const handleLogout = async () => {
-    await auth.signOut();
-    router.push('/client-portal/login');
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -58,21 +54,7 @@ export default function ClientDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">BluePeak Marketing</h1>
-            <p className="text-sm text-gray-600">Client Portal</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-          >
-            Log Out
-          </button>
-        </div>
-      </header>
+      <ClientPortalNav />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -135,7 +117,10 @@ export default function ClientDashboardPage() {
               <button className="w-full text-left px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-medium text-sm transition-colors">
                 View Proposal
               </button>
-              <button className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors">
+              <button
+                onClick={() => router.push('/client-portal/marketing')}
+                className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors"
+              >
                 Content Library
               </button>
               <button className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors">
@@ -178,9 +163,17 @@ export default function ClientDashboardPage() {
           )}
         </div>
 
-        {/* Content Library Placeholder */}
+        {/* Content Library Quick Access */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Marketing Content</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-gray-900">Marketing Content</h3>
+            <button
+              onClick={() => router.push('/client-portal/marketing')}
+              className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+            >
+              View All →
+            </button>
+          </div>
           <div className="text-center py-8">
             <svg
               className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -195,10 +188,16 @@ export default function ClientDashboardPage() {
                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
               />
             </svg>
-            <h4 className="text-lg font-medium text-gray-900 mb-2">No Content Yet</h4>
-            <p className="text-gray-600">
-              Your marketing materials will appear here once your campaign begins
+            <h4 className="text-lg font-medium text-gray-900 mb-2">Marketing Materials Library</h4>
+            <p className="text-gray-600 mb-4">
+              Access all your generated content including blog posts, social media, emails, and PDFs
             </p>
+            <button
+              onClick={() => router.push('/client-portal/marketing')}
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              Browse Content Library
+            </button>
           </div>
         </div>
       </main>

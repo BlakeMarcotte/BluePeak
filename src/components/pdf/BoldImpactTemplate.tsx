@@ -35,9 +35,9 @@ export function BoldImpactTemplate({
     // Hero Section - Full Bleed
     hero: {
       backgroundColor: primaryColor,
-      padding: 50,
-      paddingTop: 60,
-      paddingBottom: 60,
+      padding: 45,
+      paddingTop: 55,
+      paddingBottom: 55,
       position: 'relative',
     },
     logoContainer: {
@@ -51,15 +51,15 @@ export function BoldImpactTemplate({
       objectFit: 'contain',
     },
     headline: {
-      fontSize: 36,
+      fontSize: 34,
       fontWeight: 'bold',
       color: '#FFFFFF',
-      marginBottom: 20,
-      lineHeight: 1.1,
+      marginBottom: 18,
+      lineHeight: 1.15,
       letterSpacing: -0.5,
     },
     subheadline: {
-      fontSize: 16,
+      fontSize: 15,
       color: '#FFFFFF',
       opacity: 0.9,
       lineHeight: 1.5,
@@ -68,7 +68,9 @@ export function BoldImpactTemplate({
     // Stats Bar - High Contrast
     statsBar: {
       backgroundColor: '#000000',
-      padding: 25,
+      padding: 28,
+      paddingTop: 24,
+      paddingBottom: 24,
       flexDirection: 'row',
       justifyContent: 'space-around',
     },
@@ -80,7 +82,7 @@ export function BoldImpactTemplate({
       fontSize: 32,
       fontWeight: 'bold',
       color: primaryColor,
-      marginBottom: 4,
+      marginBottom: 5,
     },
     statLabel: {
       fontSize: 9,
@@ -92,19 +94,19 @@ export function BoldImpactTemplate({
     // Benefits Section
     benefitsSection: {
       padding: 45,
-      paddingTop: 40,
-      paddingBottom: 40,
+      paddingTop: 35,
+      paddingBottom: 35,
       backgroundColor: '#FFFFFF',
     },
     sectionTitle: {
       fontSize: 24,
       fontWeight: 'bold',
       color: '#000000',
-      marginBottom: 25,
+      marginBottom: 20,
       letterSpacing: -0.5,
     },
     benefitsList: {
-      gap: 15,
+      gap: 13,
     },
     benefitItem: {
       flexDirection: 'row',
@@ -137,14 +139,14 @@ export function BoldImpactTemplate({
     ctaSection: {
       backgroundColor: secondaryColor,
       padding: 45,
-      paddingTop: 35,
-      paddingBottom: 35,
+      paddingTop: 32,
+      paddingBottom: 32,
     },
     ctaText: {
       fontSize: 22,
       fontWeight: 'bold',
       color: '#FFFFFF',
-      marginBottom: 20,
+      marginBottom: 18,
       letterSpacing: -0.3,
     },
     contactGrid: {
@@ -166,7 +168,7 @@ export function BoldImpactTemplate({
     },
     // Footer
     footer: {
-      padding: 15,
+      padding: 12,
       backgroundColor: '#000000',
       alignItems: 'center',
     },

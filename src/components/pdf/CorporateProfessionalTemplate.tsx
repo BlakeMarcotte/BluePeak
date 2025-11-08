@@ -35,9 +35,9 @@ export function CorporateProfessionalTemplate({
     // Header with Logo
     header: {
       backgroundColor: '#F8FAFC',
-      padding: 30,
-      paddingTop: 25,
-      paddingBottom: 25,
+      padding: 36,
+      paddingTop: 26,
+      paddingBottom: 26,
       borderBottom: `3px solid ${primaryColor}`,
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -65,13 +65,13 @@ export function CorporateProfessionalTemplate({
     tagline: {
       fontSize: 10,
       color: '#64748B',
-      marginTop: 2,
+      marginTop: 1,
     },
     // Executive Summary
     executiveSummary: {
-      padding: 40,
-      paddingTop: 35,
-      paddingBottom: 35,
+      padding: 36,
+      paddingTop: 28,
+      paddingBottom: 28,
       backgroundColor: '#FFFFFF',
     },
     sectionLabel: {
@@ -79,14 +79,14 @@ export function CorporateProfessionalTemplate({
       color: primaryColor,
       textTransform: 'uppercase',
       letterSpacing: 1.5,
-      marginBottom: 8,
+      marginBottom: 6,
       fontFamily: 'Helvetica-Bold',
     },
     mainHeadline: {
       fontSize: 24,
       fontWeight: 'bold',
       color: '#0F172A',
-      marginBottom: 12,
+      marginBottom: 10,
       lineHeight: 1.2,
       fontFamily: 'Helvetica-Bold',
     },
@@ -98,9 +98,9 @@ export function CorporateProfessionalTemplate({
     // Stats Grid
     statsGrid: {
       backgroundColor: accentColor,
-      padding: 30,
-      paddingTop: 25,
-      paddingBottom: 25,
+      padding: 28,
+      paddingTop: 22,
+      paddingBottom: 22,
     },
     statsRow: {
       flexDirection: 'row',
@@ -108,7 +108,7 @@ export function CorporateProfessionalTemplate({
     },
     statCard: {
       backgroundColor: '#FFFFFF',
-      padding: 20,
+      padding: 18,
       flex: 1,
       marginHorizontal: 5,
       borderRadius: 4,
@@ -119,7 +119,7 @@ export function CorporateProfessionalTemplate({
       fontSize: 26,
       fontWeight: 'bold',
       color: primaryColor,
-      marginBottom: 5,
+      marginBottom: 4,
       fontFamily: 'Helvetica-Bold',
     },
     statLabel: {
@@ -131,19 +131,19 @@ export function CorporateProfessionalTemplate({
     },
     // Key Benefits - Two Column
     benefitsSection: {
-      padding: 40,
-      paddingTop: 35,
-      paddingBottom: 30,
+      padding: 36,
+      paddingTop: 28,
+      paddingBottom: 26,
     },
     benefitsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 15,
+      gap: 12,
     },
     benefitCard: {
       width: '48%',
       backgroundColor: '#F8FAFC',
-      padding: 15,
+      padding: 14,
       borderRadius: 4,
       borderTop: `3px solid ${secondaryColor}`,
     },
@@ -151,7 +151,7 @@ export function CorporateProfessionalTemplate({
       fontSize: 11,
       fontWeight: 'bold',
       color: '#0F172A',
-      marginBottom: 6,
+      marginBottom: 4,
       fontFamily: 'Helvetica-Bold',
     },
     benefitText: {
@@ -162,25 +162,25 @@ export function CorporateProfessionalTemplate({
     // CTA Section
     ctaSection: {
       backgroundColor: primaryColor,
-      padding: 35,
-      paddingTop: 28,
-      paddingBottom: 28,
+      padding: 36,
+      paddingTop: 26,
+      paddingBottom: 26,
     },
     ctaHeading: {
       fontSize: 18,
       fontWeight: 'bold',
       color: '#FFFFFF',
-      marginBottom: 15,
+      marginBottom: 12,
       fontFamily: 'Helvetica-Bold',
     },
     contactTable: {
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      padding: 15,
+      padding: 12,
       borderRadius: 4,
     },
     contactRow: {
       flexDirection: 'row',
-      marginBottom: 8,
+      marginBottom: 6,
     },
     contactLabel: {
       fontSize: 9,
@@ -196,7 +196,7 @@ export function CorporateProfessionalTemplate({
     },
     // Footer
     footer: {
-      padding: 15,
+      padding: 10,
       backgroundColor: '#F1F5F9',
       alignItems: 'center',
       borderTop: '1px solid #E2E8F0',

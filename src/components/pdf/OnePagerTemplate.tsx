@@ -36,9 +36,9 @@ export function OnePagerTemplate({
     // Hero Section
     hero: {
       backgroundColor: primaryColor,
-      padding: 35,
-      paddingTop: 40,
-      paddingBottom: 40,
+      padding: 45,
+      paddingTop: 48,
+      paddingBottom: 48,
     },
     logoContainer: {
       marginBottom: 20,
@@ -69,9 +69,9 @@ export function OnePagerTemplate({
       flexDirection: 'row',
       justifyContent: 'space-around',
       backgroundColor: accentColor,
-      padding: 20,
-      paddingTop: 18,
-      paddingBottom: 18,
+      padding: 28,
+      paddingTop: 26,
+      paddingBottom: 26,
     },
     statBox: {
       alignItems: 'center',
@@ -92,9 +92,9 @@ export function OnePagerTemplate({
     },
     // Benefits Section
     benefitsSection: {
-      padding: 35,
-      paddingTop: 28,
-      paddingBottom: 28,
+      padding: 45,
+      paddingTop: 38,
+      paddingBottom: 38,
     },
     sectionTitle: {
       fontSize: 18,
@@ -128,9 +128,9 @@ export function OnePagerTemplate({
     // CTA Section
     ctaSection: {
       backgroundColor: primaryColor,
-      padding: 28,
-      paddingTop: 24,
-      paddingBottom: 24,
+      padding: 45,
+      paddingTop: 34,
+      paddingBottom: 34,
     },
     ctaText: {
       fontSize: 16,

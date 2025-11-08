@@ -36,14 +36,16 @@ export function CreativeGeometricTemplate({
     // Hero Section with Angle
     hero: {
       backgroundColor: primaryColor,
-      padding: 45,
-      paddingTop: 50,
-      paddingBottom: 70,
+      padding: 35,
+      paddingTop: 36,
+      paddingBottom: 36,
       position: 'relative',
     },
     logoWrapper: {
       alignItems: 'flex-end',
-      marginBottom: 20,
+      marginBottom: 10,
+      position: 'relative',
+      zIndex: 10,
     },
     logo: {
       width: 60,
@@ -57,10 +59,12 @@ export function CreativeGeometricTemplate({
       fontSize: 32,
       fontWeight: 'bold',
       color: '#FFFFFF',
-      marginBottom: 15,
+      marginBottom: 10,
       lineHeight: 1.2,
       maxWidth: '85%',
       fontFamily: 'Helvetica-Bold',
+      position: 'relative',
+      zIndex: 10,
     },
     subheadline: {
       fontSize: 13,
@@ -68,6 +72,8 @@ export function CreativeGeometricTemplate({
       opacity: 0.95,
       lineHeight: 1.5,
       maxWidth: '75%',
+      position: 'relative',
+      zIndex: 10,
     },
     // Geometric Shape Overlay
     shapeOverlay: {
@@ -79,18 +85,19 @@ export function CreativeGeometricTemplate({
       backgroundColor: secondaryColor,
       borderRadius: 50,
       opacity: 0.9,
+      zIndex: 0,
     },
     // Stats - Circular Design
     statsSection: {
-      padding: 40,
-      paddingTop: 50,
-      paddingBottom: 35,
+      padding: 25,
+      paddingTop: 22,
+      paddingBottom: 18,
       backgroundColor: '#FAFAFA',
     },
     statsGrid: {
       flexDirection: 'row',
       justifyContent: 'space-around',
-      gap: 15,
+      gap: 12,
     },
     statCircle: {
       width: 110,
@@ -118,13 +125,13 @@ export function CreativeGeometricTemplate({
     },
     // Benefits - Card Grid
     benefitsSection: {
-      padding: 40,
-      paddingTop: 35,
-      paddingBottom: 35,
+      padding: 30,
+      paddingTop: 20,
+      paddingBottom: 20,
       backgroundColor: '#FFFFFF',
     },
     benefitsHeader: {
-      marginBottom: 20,
+      marginBottom: 10,
     },
     sectionTitle: {
       fontSize: 22,
@@ -143,11 +150,11 @@ export function CreativeGeometricTemplate({
     benefitsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: 8,
     },
     benefitCard: {
       width: '48%',
-      padding: 15,
+      padding: 10,
       backgroundColor: accentColor,
       borderRadius: 8,
       borderLeft: `4px solid ${secondaryColor}`,
@@ -158,7 +165,7 @@ export function CreativeGeometricTemplate({
       height: 24,
       borderRadius: 12,
       backgroundColor: primaryColor,
-      marginBottom: 8,
+      marginBottom: 4,
     },
     benefitText: {
       fontSize: 10,
@@ -168,9 +175,9 @@ export function CreativeGeometricTemplate({
     // CTA with Gradient Effect
     ctaSection: {
       backgroundColor: primaryColor,
-      padding: 40,
-      paddingTop: 30,
-      paddingBottom: 30,
+      padding: 30,
+      paddingTop: 20,
+      paddingBottom: 20,
       position: 'relative',
     },
     ctaShape: {
@@ -191,7 +198,7 @@ export function CreativeGeometricTemplate({
       fontSize: 20,
       fontWeight: 'bold',
       color: '#FFFFFF',
-      marginBottom: 18,
+      marginBottom: 10,
       fontFamily: 'Helvetica-Bold',
     },
     contactBubbles: {
@@ -213,7 +220,7 @@ export function CreativeGeometricTemplate({
     },
     // Footer
     footer: {
-      padding: 12,
+      padding: 10,
       backgroundColor: '#111827',
       alignItems: 'center',
     },
