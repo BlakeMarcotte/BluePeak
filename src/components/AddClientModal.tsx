@@ -187,7 +187,7 @@ export default function AddClientModal({
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-gray-400 text-gray-900"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-gray-400 text-gray-900"
                 placeholder="John Smith"
               />
             </div>
@@ -202,7 +202,7 @@ export default function AddClientModal({
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-gray-400 text-gray-900"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-gray-400 text-gray-900"
                 placeholder="john@company.com"
               />
             </div>
@@ -217,7 +217,7 @@ export default function AddClientModal({
                 required
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-gray-400 text-gray-900"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-gray-400 text-gray-900"
                 placeholder="Acme Corporation"
               />
             </div>
@@ -233,7 +233,7 @@ export default function AddClientModal({
                     type="text"
                     value={formData.industry}
                     onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-gray-400 text-gray-900"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-gray-400 text-gray-900"
                     placeholder="e.g., B2B SaaS, Healthcare, E-commerce"
                   />
                 </div>
@@ -247,7 +247,7 @@ export default function AddClientModal({
                     value={formData.phone}
                     onChange={handlePhoneChange}
                     maxLength={14}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-gray-400 text-gray-900"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-gray-400 text-gray-900"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -266,7 +266,7 @@ export default function AddClientModal({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 px-4 py-2 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
               >
                 {isSubmitting
                   ? (isEditMode ? 'Updating...' : 'Adding...')
