@@ -194,10 +194,23 @@ export async function POST(request: NextRequest) {
 
     const prompt = getVariantPrompt(contentType, body);
 
+    // Determine max_tokens based on content type
+    // Blog posts need much more tokens (800-1200 words = ~4000-6000 tokens)
+    const maxTokensByType: Record<ContentType, number> = {
+      'blog': 8000,           // Full blog posts need lots of tokens
+      'linkedin': 2000,       // LinkedIn posts are shorter
+      'twitter': 2000,        // Twitter threads are short
+      'email': 3000,          // Emails are medium length
+      'ad-copy': 1500,        // Ad copy is very short
+      'pdf-onepager': 2000,   // PDF data is structured and compact
+    };
+
+    const maxTokens = maxTokensByType[contentType] || 4000;
+
     // Generate variant with Claude
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
-      max_tokens: 2048,
+      max_tokens: maxTokens,
       messages: [
         {
           role: 'user',
