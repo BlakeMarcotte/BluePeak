@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import Image from 'next/image';
 import DiscoveryChat from '@/components/DiscoveryChat';
 import { DiscoveryData, DiscoveryMessage } from '@/types';
 
@@ -148,9 +149,23 @@ export default function ClientPortalPage() {
 
   if (isComplete && !showSignup) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-8">
-          <div className="mb-6">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+        <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+          <div className="mb-6 text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+                alt="BluePeak Logo"
+                width={100}
+                height={100}
+                className="object-contain"
+                priority
+              />
+            </div>
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
                 className="w-8 h-8 text-green-600"
@@ -164,19 +179,21 @@ export default function ClientPortalPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Thank You!</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent mb-2">
+              Thank You!
+            </h1>
             <p className="text-lg text-gray-600">
               We've received your information and our team is already working on your
               customized proposal.
             </p>
           </div>
 
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
-            <h2 className="font-semibold text-purple-900 mb-2">What's Next?</h2>
-            <ul className="text-sm text-purple-800 space-y-2 text-left">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h2 className="font-semibold text-blue-900 mb-2">What's Next?</h2>
+            <ul className="text-sm text-blue-800 space-y-2 text-left">
               <li className="flex items-start">
                 <svg
-                  className="w-5 h-5 text-purple-600 mr-2 mt-0.5 flex-shrink-0"
+                  className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -192,7 +209,7 @@ export default function ClientPortalPage() {
               </li>
               <li className="flex items-start">
                 <svg
-                  className="w-5 h-5 text-purple-600 mr-2 mt-0.5 flex-shrink-0"
+                  className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -208,7 +225,7 @@ export default function ClientPortalPage() {
               </li>
               <li className="flex items-start">
                 <svg
-                  className="w-5 h-5 text-purple-600 mr-2 mt-0.5 flex-shrink-0"
+                  className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -226,7 +243,7 @@ export default function ClientPortalPage() {
           </div>
 
           {/* Call to Action - Create Account */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6 mb-6">
+          <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
             <h2 className="font-semibold text-gray-900 mb-2">Create Your Client Portal Account</h2>
             <p className="text-sm text-gray-700 mb-4">
               Get instant access to your proposal, campaign materials, and analytics dashboard.
@@ -234,7 +251,7 @@ export default function ClientPortalPage() {
             </p>
             <button
               onClick={() => setShowSignup(true)}
-              className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
             >
               Create Free Account
             </button>
@@ -243,9 +260,9 @@ export default function ClientPortalPage() {
             </p>
           </div>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 text-center">
             Questions? Email us at{' '}
-            <a href="mailto:hello@bluepeak.com" className="text-purple-600 hover:underline">
+            <a href="mailto:hello@bluepeak.com" className="text-blue-600 hover:text-blue-700 font-medium">
               hello@bluepeak.com
             </a>
           </p>
@@ -257,10 +274,26 @@ export default function ClientPortalPage() {
   // Signup Screen
   if (isComplete && showSignup) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+        <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full p-8">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Your Portal Account</h1>
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+                alt="BluePeak Logo"
+                width={100}
+                height={100}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent mb-2">
+              Create Your Portal Account
+            </h1>
             <p className="text-gray-600">
               Access your proposal and marketing materials anytime
             </p>
@@ -295,7 +328,7 @@ export default function ClientPortalPage() {
                 required
                 minLength={6}
                 placeholder="At least 6 characters"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
               />
             </div>
 
@@ -311,7 +344,7 @@ export default function ClientPortalPage() {
                 required
                 minLength={6}
                 placeholder="Re-enter your password"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
               />
             </div>
 
@@ -326,7 +359,7 @@ export default function ClientPortalPage() {
             <button
               type="submit"
               disabled={isCreatingAccount}
-              className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
             >
               {isCreatingAccount ? 'Creating Account...' : 'Create Account'}
             </button>
@@ -348,10 +381,24 @@ export default function ClientPortalPage() {
   // Loading State
   if (checkingStatus) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+        <div className="relative text-center">
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+              alt="BluePeak Logo"
+              width={100}
+              height={100}
+              className="object-contain"
+              priority
+            />
+          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading...</p>
         </div>
       </div>
     );
@@ -360,10 +407,26 @@ export default function ClientPortalPage() {
   // Discovery Already Completed + Showing Signup Form
   if (alreadyCompleted && showSignup) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+        <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full p-8">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Your Portal Account</h1>
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+                alt="BluePeak Logo"
+                width={100}
+                height={100}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent mb-2">
+              Create Your Portal Account
+            </h1>
             <p className="text-gray-600">
               Access your proposal and marketing materials anytime
             </p>
@@ -398,7 +461,7 @@ export default function ClientPortalPage() {
                 required
                 minLength={6}
                 placeholder="At least 6 characters"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
               />
             </div>
 
@@ -414,7 +477,7 @@ export default function ClientPortalPage() {
                 required
                 minLength={6}
                 placeholder="Re-enter your password"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
               />
             </div>
 
@@ -429,7 +492,7 @@ export default function ClientPortalPage() {
             <button
               type="submit"
               disabled={isCreatingAccount}
-              className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
             >
               {isCreatingAccount ? 'Creating Account...' : 'Create Account'}
             </button>
@@ -451,9 +514,23 @@ export default function ClientPortalPage() {
   // Discovery Already Completed - Show Account Options
   if (alreadyCompleted && !showSignup) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+        {/* Decorative Circles */}
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+        <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full p-8">
           <div className="mb-6 text-center">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+                alt="BluePeak Logo"
+                width={100}
+                height={100}
+                className="object-contain"
+                priority
+              />
+            </div>
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
                 className="w-8 h-8 text-green-600"
@@ -483,7 +560,7 @@ export default function ClientPortalPage() {
               </div>
               <button
                 onClick={() => router.push('/client-portal/login')}
-                className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
               >
                 Go to Login
               </button>
@@ -491,7 +568,7 @@ export default function ClientPortalPage() {
           ) : (
             // No account yet - offer signup
             <div className="space-y-4">
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">Create Your Portal Account</h3>
                 <p className="text-sm text-gray-700">
                   Get instant access to your proposal, campaign materials, and analytics dashboard.
@@ -499,7 +576,7 @@ export default function ClientPortalPage() {
               </div>
               <button
                 onClick={() => setShowSignup(true)}
-                className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
               >
                 Create Free Account
               </button>
@@ -507,7 +584,7 @@ export default function ClientPortalPage() {
                 <p className="text-sm text-gray-600 mb-2">Already have an account?</p>
                 <button
                   onClick={() => router.push('/client-portal/login')}
-                  className="text-purple-600 hover:text-purple-700 font-medium text-sm"
+                  className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                 >
                   Log In Instead
                 </button>
@@ -518,7 +595,7 @@ export default function ClientPortalPage() {
           <div className="mt-6 text-center text-sm text-gray-500">
             <p>
               Questions? Email us at{' '}
-              <a href="mailto:hello@bluepeak.com" className="text-purple-600 hover:underline">
+              <a href="mailto:hello@bluepeak.com" className="text-blue-600 hover:text-blue-700 font-medium">
                 hello@bluepeak.com
               </a>
             </p>
@@ -529,18 +606,34 @@ export default function ClientPortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 py-12 px-4">
+      {/* Decorative Circles */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+      <div className="relative max-w-4xl mx-auto">
+        {/* Header with Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">BluePeak Marketing</h1>
-          <p className="text-lg text-gray-600">
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+              alt="BluePeak Logo"
+              width={120}
+              height={120}
+              className="object-contain"
+              priority
+            />
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent mb-2">
+            BluePeak Marketing
+          </h1>
+          <p className="text-lg text-gray-700">
             Discovery Questionnaire
           </p>
         </div>
 
         {/* Welcome Message */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-3">
             Welcome! Let's Get Started
           </h2>
@@ -559,14 +652,14 @@ export default function ClientPortalPage() {
         <DiscoveryChat onComplete={handleDiscoveryComplete} />
 
         {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-gray-600">
           <p>
             Powered by{' '}
             <a
               href="https://anthropic.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-purple-600 hover:underline"
+              className="text-blue-600 hover:text-blue-700 font-medium"
             >
               Claude AI
             </a>
