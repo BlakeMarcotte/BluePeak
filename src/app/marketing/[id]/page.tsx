@@ -149,6 +149,18 @@ export default function ClientMarketingPage() {
 
       const { brandProfile } = await response.json();
 
+      // Save brand profile to Firebase
+      const updateResponse = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          brandProfile,
+        }),
+      });
+
+      if (!updateResponse.ok) throw new Error('Failed to save brand profile');
+
       // Update client with brand profile
       setClient({ ...client, brandProfile });
       alert('Brand analysis complete!');
@@ -544,15 +556,49 @@ export default function ClientMarketingPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Brand Profile Display */}
+                {client.brandProfile && (
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-medium text-slate-700">Brand Profile</p>
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                        ✓ Analyzed
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Colors */}
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1.5">Color Palette</p>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {client.brandProfile.colors.map((color, idx) => (
+                            <div
+                              key={idx}
+                              className="w-6 h-6 rounded border border-slate-300 shadow-sm"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Style */}
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Style</p>
+                        <p className="text-xs text-slate-900">{client.brandProfile.style}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               {client.logoUrl && (
-                <div className="ml-6">
+                <div className="ml-6 flex-shrink-0">
                   <img
                     src={client.logoUrl}
                     alt={`${client.company} logo`}
                     className="w-20 h-20 object-contain rounded border border-slate-200"
                   />
-                  {!client.brandProfile ? (
+                  {!client.brandProfile && (
                     <button
                       onClick={handleAnalyzeBrand}
                       disabled={analyzingBrand}
@@ -560,10 +606,6 @@ export default function ClientMarketingPage() {
                     >
                       {analyzingBrand ? 'Analyzing...' : 'Analyze Brand'}
                     </button>
-                  ) : (
-                    <div className="mt-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded text-center">
-                      ✓ Brand Analyzed
-                    </div>
                   )}
                 </div>
               )}
