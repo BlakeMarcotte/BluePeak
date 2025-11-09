@@ -7,6 +7,7 @@ import { auth } from '@/lib/firebase';
 import { Client } from '@/types';
 import ClientPortalNav from '@/components/ClientPortalNav';
 import MeetingScheduler from '@/components/MeetingScheduler';
+import Modal from '@/components/Modal';
 
 // Helper function to download PDF from Firebase Storage URL
 const downloadPDF = (url: string, filename: string) => {
@@ -32,6 +33,12 @@ export default function ClientDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [showScheduler, setShowScheduler] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'success' | 'error' | 'warning' | 'confirm',
+  });
 
   useEffect(() => {
     // Check auth state
@@ -79,7 +86,12 @@ export default function ClientDashboardPage() {
       });
     }
     setShowScheduler(false);
-    alert('Meeting confirmed! You will receive a calendar invite shortly.');
+    setModalConfig({
+      title: 'Meeting Confirmed!',
+      message: 'You will receive a calendar invite shortly.',
+      type: 'success',
+    });
+    setIsModalOpen(true);
   };
 
   const handleAcceptProposal = async () => {
@@ -103,10 +115,20 @@ export default function ClientDashboardPage() {
         onboardingStage: 'proposal_accepted',
       });
 
-      alert('🎉 Proposal accepted! We\'re excited to work with you!');
+      setModalConfig({
+        title: '🎉 Proposal Accepted!',
+        message: 'We\'re excited to work with you! Our team will reach out shortly to begin your marketing journey.',
+        type: 'success',
+      });
+      setIsModalOpen(true);
     } catch (error) {
       console.error('Error accepting proposal:', error);
-      alert('Failed to accept proposal. Please try again.');
+      setModalConfig({
+        title: 'Error',
+        message: 'Failed to accept proposal. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     }
   };
   if (isLoading) {
@@ -375,6 +397,15 @@ export default function ClientDashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }
