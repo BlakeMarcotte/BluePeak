@@ -24,6 +24,9 @@ export default function ClientMarketingPage() {
   const [editingPdfId, setEditingPdfId] = useState<string | null>(null);
   const [editedPdfData, setEditedPdfData] = useState<any>(null);
   const [savingPdf, setSavingPdf] = useState(false);
+  const [editingContentId, setEditingContentId] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState<string>('');
+  const [savingContent, setSavingContent] = useState(false);
   const [generatingVariant, setGeneratingVariant] = useState(false);
   const [generatingVariantId, setGeneratingVariantId] = useState<string | null>(null);
   const [pdfPreviews, setPdfPreviews] = useState<Record<string, string>>({});
@@ -253,6 +256,69 @@ export default function ClientMarketingPage() {
       alert('Failed to save PDF changes. Please try again.');
     } finally {
       setSavingPdf(false);
+    }
+  };
+
+  // Text Content Editing Functions
+  const startEditingContent = (contentId: string, content: string) => {
+    setEditingContentId(contentId);
+    setEditedContent(content);
+  };
+
+  const cancelEditingContent = () => {
+    setEditingContentId(null);
+    setEditedContent('');
+  };
+
+  const saveContentEdit = async (contentId: string) => {
+    if (!client || !editedContent.trim()) return;
+
+    setSavingContent(true);
+    try {
+      // Find the content item and update it
+      const updatedContent = (client.marketingContent || []).map(c => {
+        if (c.id === contentId) {
+          return {
+            ...c,
+            content: editedContent,
+            wordCount: editedContent.trim().split(/\s+/).length,
+            characterCount: editedContent.length,
+          };
+        }
+        return c;
+      });
+
+      const response = await fetch('/api/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: client.id,
+          marketingContent: updatedContent,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save content edits');
+
+      // Reload client data
+      const profileResponse = await fetch(`/api/client-auth/profile?uid=${auth.currentUser?.uid}`);
+      if (profileResponse.ok) {
+        const data = await profileResponse.json();
+        const clientData: Client = {
+          ...data.client,
+          createdAt: new Date(data.client.createdAt),
+          updatedAt: new Date(data.client.updatedAt),
+          accountCreatedAt: data.client.accountCreatedAt ? new Date(data.client.accountCreatedAt) : undefined,
+        };
+        setClient(clientData);
+      }
+
+      setEditingContentId(null);
+      setEditedContent('');
+    } catch (error) {
+      console.error('Error saving content edit:', error);
+      alert('Failed to save content changes. Please try again.');
+    } finally {
+      setSavingContent(false);
     }
   };
 
@@ -529,12 +595,20 @@ export default function ClientMarketingPage() {
                     )}
                     {/* Regular Content Buttons */}
                     {activeTab !== 'pdf-onepager' && (
-                      <button
-                        onClick={() => copyToClipboard(item.content)}
-                        className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
-                      >
-                        Copy
-                      </button>
+                      <>
+                        <button
+                          onClick={() => startEditingContent(item.id!, item.content)}
+                          className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(item.content)}
+                          className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
+                        >
+                          Copy
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -791,6 +865,82 @@ export default function ClientMarketingPage() {
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 )}
                 {savingPdf ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text Content Edit Modal */}
+      {editingContentId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
+              <h2 className="text-xl font-bold text-slate-900">Edit Content</h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Edit your {CONTENT_TYPES.find(ct => ct.value === activeTab)?.label.toLowerCase()} content below.
+                {activeTab === 'linkedin' && ' LinkedIn has a 1,300 character limit.'}
+                {activeTab === 'twitter' && ' Keep tweets under 280 characters each.'}
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Content
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    {editedContent.length} characters • {editedContent.trim().split(/\s+/).length} words
+                    {activeTab === 'linkedin' && editedContent.length > 1300 && (
+                      <span className="text-red-600 ml-2">• Exceeds LinkedIn limit!</span>
+                    )}
+                  </span>
+                </div>
+                <textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  rows={20}
+                  className={`w-full px-4 py-3 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm ${
+                    activeTab === 'linkedin' && editedContent.length > 1300
+                      ? 'border-red-500'
+                      : editedContent.length > (activeTab === 'linkedin' ? 1200 : 10000)
+                      ? 'border-yellow-500'
+                      : 'border-slate-300'
+                  }`}
+                  placeholder="Enter your content..."
+                />
+                {activeTab === 'linkedin' && editedContent.length > 1200 && editedContent.length <= 1300 && (
+                  <p className="text-xs text-yellow-600 mt-2">Approaching LinkedIn character limit</p>
+                )}
+                {activeTab === 'blog' && (
+                  <p className="text-xs text-slate-500 mt-2">
+                    Recommended: 800-1,200 words for SEO-optimized blog posts
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={cancelEditingContent}
+                disabled={savingContent}
+                className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => saveContentEdit(editingContentId)}
+                disabled={savingContent || (activeTab === 'linkedin' && editedContent.length > 1300)}
+                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                {savingContent && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
+                {savingContent ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
