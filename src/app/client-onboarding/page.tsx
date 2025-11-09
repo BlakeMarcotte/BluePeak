@@ -295,17 +295,17 @@ export default function ClientOnboardingPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
         <Navbar />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent mb-2">
                 Client Onboarding
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-700">
                 Manage active client onboarding pipelines and progress reporting
               </p>
             </div>
@@ -313,14 +313,14 @@ export default function ClientOnboardingPage() {
 
           {/* Tabs */}
           <div className="mb-6">
-            <div className="border-b border-gray-200">
+            <div className="border-b border-cyan-200">
               <nav className="-mb-px flex space-x-8">
                 <button
                   onClick={() => setActiveTab('pipeline')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === 'pipeline'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-cyan-600 text-cyan-700'
+                      : 'border-transparent text-gray-600 hover:text-cyan-700 hover:border-cyan-300'
                   }`}
                 >
                   Onboarding Pipeline
@@ -329,8 +329,8 @@ export default function ClientOnboardingPage() {
                   onClick={() => setActiveTab('reports')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === 'reports'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-cyan-600 text-cyan-700'
+                      : 'border-transparent text-gray-600 hover:text-cyan-700 hover:border-cyan-300'
                   }`}
                 >
                   Progress Reports
@@ -343,11 +343,11 @@ export default function ClientOnboardingPage() {
           {activeTab === 'pipeline' && (
             <div>
               {/* Info Banner */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-6 mb-6 shadow-md">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg
-                      className="h-5 w-5 text-blue-400"
+                      className="h-6 w-6 text-cyan-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -359,10 +359,10 @@ export default function ClientOnboardingPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">
+                    <h3 className="text-sm font-medium text-cyan-900">
                       Onboarding Workflow
                     </h3>
-                    <p className="mt-1 text-sm text-blue-700">
+                    <p className="mt-1 text-sm text-cyan-800">
                       Track each client through the onboarding process: Discovery → Meeting → Proposal → Acceptance
                     </p>
                   </div>
@@ -371,9 +371,9 @@ export default function ClientOnboardingPage() {
 
               {/* Active Onboardings */}
               {clients.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-12 text-center">
+                <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-12 text-center">
                   <svg
-                    className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                    className="mx-auto h-12 w-12 text-cyan-300 mb-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -388,7 +388,7 @@ export default function ClientOnboardingPage() {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     No Active Onboardings
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-700">
                     Clients will appear here once they begin the onboarding process
                   </p>
                 </div>
@@ -410,11 +410,11 @@ export default function ClientOnboardingPage() {
 
           {activeTab === 'reports' && (
             <div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-6 mb-6 shadow-md">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg
-                      className="h-5 w-5 text-green-400"
+                      className="h-6 w-6 text-cyan-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -426,10 +426,10 @@ export default function ClientOnboardingPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">
+                    <h3 className="text-sm font-medium text-cyan-900">
                       Progress Report Generator
                     </h3>
-                    <p className="mt-1 text-sm text-green-700">
+                    <p className="mt-1 text-sm text-cyan-800">
                       Input your completed tasks and metrics, and Claude will generate a
                       professional progress report for your client.
                     </p>
@@ -451,12 +451,12 @@ export default function ClientOnboardingPage() {
             <div className="fixed inset-0 bg-black/50 transition-opacity" />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-8 z-10">
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 z-10 border-2 border-cyan-100">
               <div className="text-center">
                 {/* Icon */}
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-cyan-100 to-blue-100 mb-4">
                   <svg
-                    className="h-8 w-8 text-blue-600 animate-spin"
+                    className="h-8 w-8 text-cyan-600 animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -483,25 +483,25 @@ export default function ClientOnboardingPage() {
                 </h3>
 
                 {/* Status */}
-                <p className="text-sm text-gray-600 mb-6">
+                <p className="text-sm text-gray-700 mb-6">
                   {generationStatus}
                 </p>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                <div className="w-full bg-cyan-100 rounded-full h-3 mb-2">
                   <div
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 h-3 rounded-full transition-all duration-500 ease-out"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out shadow-md"
                     style={{ width: `${generationProgress}%` }}
                   ></div>
                 </div>
 
                 {/* Percentage */}
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-gray-900">
                   {generationProgress}%
                 </p>
 
                 {/* Info */}
-                <p className="text-xs text-gray-500 mt-4">
+                <p className="text-xs text-gray-600 mt-4">
                   This may take 30-60 seconds. Please don't close this window.
                 </p>
               </div>

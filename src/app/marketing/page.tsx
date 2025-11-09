@@ -64,13 +64,13 @@ export default function MarketingPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
           <Navbar />
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="bg-white border border-slate-200 rounded-lg p-8">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-200 rounded-xl shadow-lg p-8">
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-3"></div>
-                <p className="text-slate-700">Loading clients...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 mr-3"></div>
+                <p className="text-gray-700">Loading clients...</p>
               </div>
             </div>
           </main>
@@ -81,14 +81,14 @@ export default function MarketingPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
         <Navbar />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Marketing Content Generator</h1>
-            <p className="text-slate-600">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent mb-2">Marketing Content Generator</h1>
+            <p className="text-gray-700">
               Generate AI-powered marketing content for your clients
             </p>
           </div>
@@ -100,62 +100,62 @@ export default function MarketingPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search clients by name, company, or industry..."
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-cyan-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent shadow-sm"
             />
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white border border-slate-200 rounded-lg p-6">
-              <div className="text-3xl font-bold text-indigo-600 mb-1">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
+              <div className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-1">
                 {clients.length}
               </div>
-              <div className="text-sm text-slate-600">Eligible Clients</div>
-              <p className="text-xs text-slate-500 mt-1">Completed discovery</p>
+              <div className="text-sm text-gray-600">Eligible Clients</div>
+              <p className="text-xs text-gray-500 mt-1">Completed discovery</p>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg p-6">
-              <div className="text-3xl font-bold text-green-600 mb-1">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
+              <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-1">
                 {clients.filter(c => c.brandProfile).length}
               </div>
-              <div className="text-sm text-slate-600">Brand Analyzed</div>
-              <p className="text-xs text-slate-500 mt-1">Logo analysis complete</p>
+              <div className="text-sm text-gray-600">Brand Analyzed</div>
+              <p className="text-xs text-gray-500 mt-1">Logo analysis complete</p>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg p-6">
-              <div className="text-3xl font-bold text-purple-600 mb-1">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
                 {clients.reduce((sum, c) => sum + (c.marketingContent?.length || 0), 0)}
               </div>
-              <div className="text-sm text-slate-600">Total Content</div>
-              <p className="text-xs text-slate-500 mt-1">Marketing materials generated</p>
+              <div className="text-sm text-gray-600">Total Content</div>
+              <p className="text-xs text-gray-500 mt-1">Marketing materials generated</p>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg p-6">
-              <div className="text-3xl font-bold text-emerald-600 mb-1">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
+              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-1">
                 {clients.reduce((sum, c) => sum + (c.marketingContent?.filter(m => m.published).length || 0), 0)}
               </div>
-              <div className="text-sm text-slate-600">Published</div>
-              <p className="text-xs text-slate-500 mt-1">Visible to clients</p>
+              <div className="text-sm text-gray-600">Published</div>
+              <p className="text-xs text-gray-500 mt-1">Visible to clients</p>
             </div>
           </div>
 
           {/* Client Cards */}
           {clients.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-12 text-center">
               <div className="text-6xl mb-4">📭</div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 No Clients with Completed Discovery
               </h3>
-              <p className="text-slate-600 max-w-md mx-auto mb-6">
+              <p className="text-gray-700 max-w-md mx-auto mb-6">
                 Clients need to complete the discovery questionnaire before you can generate marketing content for them.
               </p>
               <button
                 onClick={() => router.push('/client-onboarding')}
-                className="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all shadow-md"
               >
                 Go to Client Onboarding
               </button>
             </div>
           ) : filteredClients.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-              <p className="text-slate-600">No clients match your search.</p>
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-12 text-center">
+              <p className="text-gray-700">No clients match your search.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -163,21 +163,21 @@ export default function MarketingPage() {
                 <div
                   key={client.id}
                   onClick={() => router.push(`/marketing/${client.id}`)}
-                  className="bg-white border border-slate-200 rounded-lg p-6 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group"
+                  className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6 hover:border-cyan-300 hover:shadow-xl transition-all cursor-pointer group"
                 >
                   {/* Client Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-cyan-700 transition-colors">
                         {client.company}
                       </h3>
-                      <p className="text-sm text-slate-600">{client.name}</p>
+                      <p className="text-sm text-gray-600">{client.name}</p>
                     </div>
                     {client.logoUrl && (
                       <img
                         src={client.logoUrl}
                         alt={`${client.company} logo`}
-                        className="w-12 h-12 object-contain rounded border border-slate-200"
+                        className="w-12 h-12 object-contain rounded border border-cyan-200"
                       />
                     )}
                   </div>
@@ -186,14 +186,14 @@ export default function MarketingPage() {
                   <div className="space-y-2 mb-4">
                     {client.industry && (
                       <div className="flex items-center text-sm">
-                        <span className="text-slate-500 mr-2">Industry:</span>
-                        <span className="text-slate-900 font-medium">{client.industry}</span>
+                        <span className="text-gray-600 mr-2">Industry:</span>
+                        <span className="text-gray-900 font-medium">{client.industry}</span>
                       </div>
                     )}
                     {client.discoveryData?.targetAudience && (
                       <div className="flex items-center text-sm">
-                        <span className="text-slate-500 mr-2">Audience:</span>
-                        <span className="text-slate-900 font-medium truncate">
+                        <span className="text-gray-600 mr-2">Audience:</span>
+                        <span className="text-gray-900 font-medium truncate">
                           {client.discoveryData.targetAudience}
                         </span>
                       </div>
@@ -201,12 +201,12 @@ export default function MarketingPage() {
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-4 pt-4 border-t border-cyan-100">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-indigo-600">
+                      <span className="text-2xl font-bold text-cyan-600">
                         {client.marketingContent?.length || 0}
                       </span>
-                      <span className="text-xs text-slate-600">
+                      <span className="text-xs text-gray-600">
                         Content<br/>Pieces
                       </span>
                     </div>
@@ -214,12 +214,12 @@ export default function MarketingPage() {
                       <span className="text-2xl font-bold text-emerald-600">
                         {client.marketingContent?.filter(m => m.published).length || 0}
                       </span>
-                      <span className="text-xs text-slate-600">
+                      <span className="text-xs text-gray-600">
                         Published
                       </span>
                     </div>
                     {client.brandProfile && (
-                      <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                      <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                         </svg>
@@ -229,7 +229,7 @@ export default function MarketingPage() {
                   </div>
 
                   {/* Hover Arrow */}
-                  <div className="mt-4 flex items-center text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-4 flex items-center text-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-sm font-medium">Generate content</span>
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>

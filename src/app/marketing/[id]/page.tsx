@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
+import Modal from '@/components/Modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { Client, ContentType, GeneratedContent, PDFTemplate } from '@/types';
 
@@ -39,6 +40,12 @@ export default function ClientMarketingPage() {
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
   const [pdfPreviews, setPdfPreviews] = useState<Record<string, string>>({});
   const [loadingPdfPreviews, setLoadingPdfPreviews] = useState<Record<string, boolean>>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'success' | 'error' | 'warning' | 'confirm',
+  });
 
   useEffect(() => {
     if (params.id) {
@@ -67,8 +74,13 @@ export default function ClientMarketingPage() {
       setClient(clientData);
     } catch (error) {
       console.error('Error loading client:', error);
-      alert('Failed to load client');
-      router.push('/marketing');
+      setModalConfig({
+        title: 'Error',
+        message: 'Failed to load client. Redirecting back to clients list.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
+      setTimeout(() => router.push('/marketing'), 2000);
     } finally {
       setLoading(false);
     }
@@ -130,7 +142,12 @@ export default function ClientMarketingPage() {
 
   const handleAnalyzeBrand = async () => {
     if (!client || !client.logoUrl) {
-      alert('No logo found for this client. Please upload a logo first.');
+      setModalConfig({
+        title: 'No Logo Found',
+        message: 'No logo found for this client. Please upload a logo first.',
+        type: 'warning',
+      });
+      setIsModalOpen(true);
       return;
     }
 
@@ -163,10 +180,20 @@ export default function ClientMarketingPage() {
 
       // Update client with brand profile
       setClient({ ...client, brandProfile });
-      alert('Brand analysis complete!');
+      setModalConfig({
+        title: 'Brand Analysis Complete!',
+        message: 'Your brand colors and style have been analyzed and saved.',
+        type: 'success',
+      });
+      setIsModalOpen(true);
     } catch (error) {
       console.error('Error analyzing brand:', error);
-      alert('Failed to analyze brand. Please try again.');
+      setModalConfig({
+        title: 'Analysis Failed',
+        message: 'Failed to analyze brand. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setAnalyzingBrand(false);
     }
@@ -238,7 +265,12 @@ export default function ClientMarketingPage() {
       setAdditionalContext('');
     } catch (error) {
       console.error('Error generating content:', error);
-      alert('Failed to generate content. Please try again.');
+      setModalConfig({
+        title: 'Generation Failed',
+        message: 'Failed to generate content. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setGenerating(false);
     }
@@ -246,7 +278,12 @@ export default function ClientMarketingPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    setModalConfig({
+      title: 'Copied!',
+      message: 'Content copied to clipboard.',
+      type: 'success',
+    });
+    setIsModalOpen(true);
   };
 
   const downloadPDF = async (pdfData: any, contentName?: string) => {
@@ -287,7 +324,12 @@ export default function ClientMarketingPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      setModalConfig({
+        title: 'Download Failed',
+        message: 'Failed to download PDF. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setDownloadingPdf(false);
     }
@@ -319,7 +361,12 @@ export default function ClientMarketingPage() {
       await loadClient();
     } catch (error) {
       console.error('Error deleting content:', error);
-      alert('Failed to delete content. Please try again.');
+      setModalConfig({
+        title: 'Delete Failed',
+        message: 'Failed to delete content. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setDeletingContentId(null);
     }
@@ -348,7 +395,12 @@ export default function ClientMarketingPage() {
       await loadClient();
     } catch (error) {
       console.error('Error toggling publish status:', error);
-      alert('Failed to update publish status. Please try again.');
+      setModalConfig({
+        title: 'Update Failed',
+        message: 'Failed to update publish status. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     }
   };
 
@@ -427,7 +479,12 @@ export default function ClientMarketingPage() {
       setEditedPdfData(null);
     } catch (error) {
       console.error('Error saving PDF edit:', error);
-      alert('Failed to save PDF changes. Please try again.');
+      setModalConfig({
+        title: 'Save Failed',
+        message: 'Failed to save PDF changes. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setSavingPdf(false);
     }
@@ -478,7 +535,12 @@ export default function ClientMarketingPage() {
       setEditedContent('');
     } catch (error) {
       console.error('Error saving content edit:', error);
-      alert('Failed to save content changes. Please try again.');
+      setModalConfig({
+        title: 'Save Failed',
+        message: 'Failed to save content changes. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setSavingContent(false);
     }
@@ -487,13 +549,13 @@ export default function ClientMarketingPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
           <Navbar />
           <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="bg-white border border-slate-200 rounded-lg p-8">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-200 rounded-xl shadow-lg p-8">
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-3"></div>
-                <p className="text-slate-700">Loading client...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 mr-3"></div>
+                <p className="text-gray-700">Loading client...</p>
               </div>
             </div>
           </main>
@@ -515,43 +577,43 @@ export default function ClientMarketingPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
         <Navbar />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
             <button
               onClick={() => router.push('/marketing')}
-              className="flex items-center text-slate-600 hover:text-slate-900 mb-4 transition-colors"
+              className="flex items-center text-gray-700 hover:text-cyan-700 mb-4 transition-colors font-medium"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
               </svg>
               Back to Clients
             </button>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent mb-2">
               Marketing Content for {client.company}
             </h1>
-            <p className="text-slate-600">
+            <p className="text-gray-700">
               {client.industry && `${client.industry} • `}
               {client.discoveryData?.targetAudience || 'No target audience specified'}
             </p>
           </div>
 
           {/* Client Info Card */}
-          <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+          <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6 mb-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-slate-900 mb-3">Client Information</h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Client Information</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-500">Contact</p>
-                    <p className="text-sm text-slate-900">{client.name}</p>
-                    <p className="text-sm text-slate-600">{client.email}</p>
+                    <p className="text-sm text-gray-600">Contact</p>
+                    <p className="text-sm text-gray-900">{client.name}</p>
+                    <p className="text-sm text-gray-700">{client.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500">Business Goals</p>
-                    <p className="text-sm text-slate-900">
+                    <p className="text-sm text-gray-600">Business Goals</p>
+                    <p className="text-sm text-gray-900">
                       {client.discoveryData?.businessGoals || 'Not specified'}
                     </p>
                   </div>
@@ -559,22 +621,22 @@ export default function ClientMarketingPage() {
 
                 {/* Brand Profile Display */}
                 {client.brandProfile && (
-                  <div className="mt-4 pt-4 border-t border-slate-200">
+                  <div className="mt-4 pt-4 border-t border-cyan-100">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-medium text-slate-700">Brand Profile</p>
-                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                      <p className="text-sm font-medium text-gray-700">Brand Profile</p>
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
                         ✓ Analyzed
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {/* Colors */}
                       <div>
-                        <p className="text-xs text-slate-500 mb-1.5">Color Palette</p>
+                        <p className="text-xs text-gray-600 mb-1.5">Color Palette</p>
                         <div className="flex gap-1.5 flex-wrap">
                           {client.brandProfile.colors.map((color, idx) => (
                             <div
                               key={idx}
-                              className="w-6 h-6 rounded border border-slate-300 shadow-sm"
+                              className="w-6 h-6 rounded border border-cyan-200 shadow-sm"
                               style={{ backgroundColor: color }}
                               title={color}
                             />
@@ -584,8 +646,8 @@ export default function ClientMarketingPage() {
 
                       {/* Style */}
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">Style</p>
-                        <p className="text-xs text-slate-900">{client.brandProfile.style}</p>
+                        <p className="text-xs text-gray-600 mb-1">Style</p>
+                        <p className="text-xs text-gray-900">{client.brandProfile.style}</p>
                       </div>
                     </div>
                   </div>
@@ -596,13 +658,13 @@ export default function ClientMarketingPage() {
                   <img
                     src={client.logoUrl}
                     alt={`${client.company} logo`}
-                    className="w-20 h-20 object-contain rounded border border-slate-200"
+                    className="w-20 h-20 object-contain rounded border border-cyan-200"
                   />
                   {!client.brandProfile && (
                     <button
                       onClick={handleAnalyzeBrand}
                       disabled={analyzingBrand}
-                      className="mt-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="mt-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
                       {analyzingBrand ? 'Analyzing...' : 'Analyze Brand'}
                     </button>
@@ -613,8 +675,8 @@ export default function ClientMarketingPage() {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white border border-slate-200 rounded-lg mb-6">
-            <div className="border-b border-slate-200 overflow-x-auto">
+          <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg mb-6">
+            <div className="border-b border-cyan-100 overflow-x-auto">
               <nav className="flex -mb-px">
                 {CONTENT_TYPES.map(({ value, label }) => {
                   const count = (client.marketingContent || []).filter((c) => c.type === value).length;
@@ -624,13 +686,17 @@ export default function ClientMarketingPage() {
                       onClick={() => setActiveTab(value)}
                       className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                         activeTab === value
-                          ? 'border-indigo-600 text-indigo-600'
-                          : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+                          ? 'border-cyan-600 text-cyan-700 bg-cyan-50/50'
+                          : 'border-transparent text-gray-600 hover:text-cyan-700 hover:bg-cyan-50/30 hover:border-cyan-300'
                       }`}
                     >
                       {label}
                       {count > 0 && (
-                        <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-700">
+                        <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                          activeTab === value
+                            ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
                           {count}
                         </span>
                       )}
@@ -644,12 +710,12 @@ export default function ClientMarketingPage() {
             <div className="p-6">
               {/* Description */}
               <div className="mb-6">
-                <p className="text-sm text-slate-600">{activeContentType?.description}</p>
+                <p className="text-sm text-gray-700">{activeContentType?.description}</p>
               </div>
 
               {/* Content Name Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Content Name <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -657,11 +723,11 @@ export default function ClientMarketingPage() {
                   value={contentName}
                   onChange={(e) => setContentName(e.target.value)}
                   placeholder={`e.g., "Summer Campaign ${activeContentType?.label}" or "Q4 Launch Material"`}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-cyan-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   disabled={generating}
                   required
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Give this content a custom name to easily identify it later
                 </p>
               </div>
@@ -669,13 +735,13 @@ export default function ClientMarketingPage() {
               {/* Template Selector - Only for PDF One-Pager */}
               {activeTab === 'pdf-onepager' && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Template Style
                   </label>
                   <select
                     value={selectedTemplate}
                     onChange={(e) => setSelectedTemplate(e.target.value as PDFTemplate)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-cyan-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                     disabled={generating}
                   >
                     <option value="modern-minimal">Modern Minimal - Clean & elegant</option>
@@ -683,7 +749,7 @@ export default function ClientMarketingPage() {
                     <option value="corporate-professional">Corporate Professional - Traditional & structured</option>
                     <option value="creative-geometric">Creative Geometric - Modern shapes & gradients</option>
                   </select>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     Choose a design style that matches your brand personality
                   </p>
                 </div>
@@ -691,7 +757,7 @@ export default function ClientMarketingPage() {
 
               {/* Additional Context Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Additional Context (Optional)
                 </label>
                 <textarea
@@ -699,7 +765,7 @@ export default function ClientMarketingPage() {
                   onChange={(e) => setAdditionalContext(e.target.value)}
                   placeholder="Add specific themes, angles, or requirements for this content..."
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-cyan-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   disabled={generating}
                 />
               </div>
@@ -708,7 +774,7 @@ export default function ClientMarketingPage() {
               <button
                 onClick={handleGenerateContent}
                 disabled={generating || !contentName.trim()}
-                className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
                 {generating ? (
                   <>
@@ -729,20 +795,20 @@ export default function ClientMarketingPage() {
 
           {/* Content History */}
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
               {activeContentType?.label} History ({filteredContent.length})
             </h2>
 
             {filteredContent.length > 0 ? (
               <div className="space-y-4">
                 {filteredContent.map((item, index) => (
-                  <div key={item.id || index} className="bg-white border border-slate-200 rounded-lg p-6">
+                  <div key={item.id || index} className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
                           {item.name}
                         </h3>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-gray-600">
                           {item.wordCount && `${item.wordCount} words`}
                           {item.characterCount && ` • ${item.characterCount} characters`}
                           {' • '}
@@ -755,10 +821,10 @@ export default function ClientMarketingPage() {
                         <button
                           onClick={() => handleTogglePublish(item.id!, item.published || false)}
                           disabled={deletingContentId === item.id}
-                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                             item.published
-                              ? 'text-green-700 bg-green-50 hover:bg-green-100'
-                              : 'text-slate-600 bg-slate-100 hover:bg-slate-200'
+                              ? 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-200'
+                              : 'text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300'
                           }`}
                         >
                           {item.published ? '✓ Published' : 'Publish'}
@@ -770,7 +836,7 @@ export default function ClientMarketingPage() {
                             <button
                               onClick={() => downloadPDF(item.pdfData, item.name)}
                               disabled={downloadingPdf || deletingContentId === item.id}
-                              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-lg transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                               {downloadingPdf ? (
                                 <>
@@ -784,14 +850,14 @@ export default function ClientMarketingPage() {
                             <button
                               onClick={() => startEditingPdf(item.id!, item.pdfData)}
                               disabled={downloadingPdf || deletingContentId === item.id}
-                              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300"
                             >
                               Edit PDF Content
                             </button>
                             <button
                               onClick={() => handleDeleteContent(item.id!)}
                               disabled={deletingContentId === item.id || downloadingPdf}
-                              className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-red-300"
                             >
                               {deletingContentId === item.id ? 'Deleting...' : 'Delete'}
                             </button>
@@ -803,21 +869,21 @@ export default function ClientMarketingPage() {
                             <button
                               onClick={() => startEditingContent(item.id!, item.content)}
                               disabled={deletingContentId === item.id}
-                              className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-gray-300"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => copyToClipboard(item.content)}
                               disabled={deletingContentId === item.id}
-                              className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-3 py-1.5 text-sm font-medium text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-cyan-200"
                             >
                               Copy
                             </button>
                             <button
                               onClick={() => handleDeleteContent(item.id!)}
                               disabled={deletingContentId === item.id}
-                              className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-red-300"
                             >
                               {deletingContentId === item.id ? 'Deleting...' : 'Delete'}
                             </button>
@@ -832,28 +898,28 @@ export default function ClientMarketingPage() {
                         /* PDF Preview */
                         <div className="w-full">
                           {loadingPdfPreviews[item.id!] ? (
-                            <div className="flex items-center justify-center h-96 bg-slate-50 rounded-lg">
+                            <div className="flex items-center justify-center h-96 bg-cyan-50/50 rounded-lg border border-cyan-100">
                               <div className="text-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                                <p className="text-slate-600">Generating PDF preview...</p>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+                                <p className="text-gray-700">Generating PDF preview...</p>
                               </div>
                             </div>
                           ) : pdfPreviews[item.id!] ? (
                             <iframe
                               src={`${pdfPreviews[item.id!]}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                              className="w-full h-[600px] border border-slate-300 rounded-lg"
+                              className="w-full h-[600px] border border-cyan-200 rounded-lg shadow-inner"
                               title={`${item.name} PDF Preview`}
                             />
                           ) : (
-                            <div className="flex items-center justify-center h-96 bg-slate-50 rounded-lg">
-                              <p className="text-slate-600">PDF preview not available</p>
+                            <div className="flex items-center justify-center h-96 bg-cyan-50/50 rounded-lg border border-cyan-100">
+                              <p className="text-gray-700">PDF preview not available</p>
                             </div>
                           )}
                         </div>
                       ) : (
                         /* Regular Content Display */
                         <div className="prose prose-sm max-w-none">
-                          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-lg">
+                          <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200">
                             {item.content}
                           </pre>
                         </div>
@@ -863,8 +929,8 @@ export default function ClientMarketingPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-                <p className="text-slate-600">
+              <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-12 text-center">
+                <p className="text-gray-700">
                   No {activeContentType?.label.toLowerCase()} generated yet. Fill in the form above and click generate to get started.
                 </p>
               </div>
@@ -875,11 +941,11 @@ export default function ClientMarketingPage() {
         {/* PDF Edit Modal */}
         {editingPdfId && editedPdfData && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-cyan-100">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
-                <h2 className="text-xl font-bold text-slate-900">Edit PDF Content</h2>
-                <p className="text-sm text-slate-600 mt-1">
+              <div className="sticky top-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-200 px-6 py-4 rounded-t-2xl">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent">Edit PDF Content</h2>
+                <p className="text-sm text-gray-700 mt-1">
                   Edit your PDF content below. Character limits help maintain proper layout.
                 </p>
               </div>
@@ -888,8 +954,8 @@ export default function ClientMarketingPage() {
               <div className="px-6 py-4 space-y-6">
                 {/* Headline */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Headline <span className="text-xs text-slate-500">({editedPdfData.headline?.length || 0}/60 characters)</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Headline <span className="text-xs text-gray-500">({editedPdfData.headline?.length || 0}/60 characters)</span>
                   </label>
                   <input
                     type="text"
@@ -900,8 +966,8 @@ export default function ClientMarketingPage() {
                       }
                     }}
                     maxLength={60}
-                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                      (editedPdfData.headline?.length || 0) > 55 ? 'border-yellow-500' : 'border-slate-300'
+                    className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                      (editedPdfData.headline?.length || 0) > 55 ? 'border-yellow-500' : 'border-cyan-200'
                     }`}
                     placeholder="Enter headline..."
                   />
@@ -1067,18 +1133,18 @@ export default function ClientMarketingPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+              <div className="sticky bottom-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-t border-cyan-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
                 <button
                   onClick={cancelEditingPdf}
                   disabled={savingPdf}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors border border-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => savePdfEdit(editingPdfId)}
                   disabled={savingPdf}
-                  className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2"
                 >
                   {savingPdf && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -1093,11 +1159,11 @@ export default function ClientMarketingPage() {
         {/* Text Content Edit Modal */}
         {editingContentId && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-cyan-100">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
-                <h2 className="text-xl font-bold text-slate-900">Edit Content</h2>
-                <p className="text-sm text-slate-600 mt-1">
+              <div className="sticky top-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-200 px-6 py-4 rounded-t-2xl">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent">Edit Content</h2>
+                <p className="text-sm text-gray-700 mt-1">
                   Edit your {CONTENT_TYPES.find(ct => ct.value === activeTab)?.label.toLowerCase()} content below.
                   {activeTab === 'linkedin' && ' LinkedIn has a 1,300 character limit.'}
                   {activeTab === 'twitter' && ' Keep tweets under 280 characters each.'}
@@ -1143,18 +1209,18 @@ export default function ClientMarketingPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+              <div className="sticky bottom-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-t border-cyan-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
                 <button
                   onClick={cancelEditingContent}
                   disabled={savingContent}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors border border-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => saveContentEdit(editingContentId)}
                   disabled={savingContent || (activeTab === 'linkedin' && editedContent.length > 1300)}
-                  className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2"
                 >
                   {savingContent && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -1166,6 +1232,15 @@ export default function ClientMarketingPage() {
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </ProtectedRoute>
   );
 }

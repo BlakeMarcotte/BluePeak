@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProgressReportData, Client } from '@/types';
+import Modal from './Modal';
 
 interface ProgressReportGeneratorProps {
   clients?: Client[];
@@ -25,6 +26,12 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAutoFillBanner, setShowAutoFillBanner] = useState(false);
   const [autoFilledCount, setAutoFilledCount] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'success' | 'error',
+  });
 
   // Content type icons and colors
   const contentTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
@@ -197,7 +204,12 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
       setGeneratedReport(data.report);
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Failed to generate report. Please try again.');
+      setModalConfig({
+        title: 'Generation Failed',
+        message: 'Failed to generate report. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setIsGenerating(false);
     }
@@ -205,7 +217,12 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedReport);
-    alert('Report copied to clipboard!');
+    setModalConfig({
+      title: 'Copied!',
+      message: 'Report copied to clipboard.',
+      type: 'success',
+    });
+    setIsModalOpen(true);
   };
 
   // Calculate report metadata
@@ -679,6 +696,15 @@ export default function ProgressReportGenerator({ clients = [] }: ProgressReport
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }

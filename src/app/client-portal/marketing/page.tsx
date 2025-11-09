@@ -6,6 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Client, ContentType, GeneratedContent } from '@/types';
 import ClientPortalNav from '@/components/ClientPortalNav';
+import Modal from '@/components/Modal';
 
 const CONTENT_TYPES: { value: ContentType; label: string; icon: string }[] = [
   { value: 'pdf-onepager', label: 'PDF Materials', icon: '📄' },
@@ -31,6 +32,12 @@ export default function ClientMarketingPage() {
   const [generatingVariantId, setGeneratingVariantId] = useState<string | null>(null);
   const [pdfPreviews, setPdfPreviews] = useState<Record<string, string>>({});
   const [loadingPdfPreviews, setLoadingPdfPreviews] = useState<Record<string, boolean>>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'success' | 'error' | 'warning',
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -55,7 +62,12 @@ export default function ClientMarketingPage() {
         setClient(clientData);
       } catch (error) {
         console.error('Error fetching client profile:', error);
-        alert('Failed to load your profile');
+        setModalConfig({
+          title: 'Error',
+          message: 'Failed to load your profile. Please try logging in again.',
+          type: 'error',
+        });
+        setIsModalOpen(true);
       } finally {
         setLoading(false);
       }
@@ -120,7 +132,12 @@ export default function ClientMarketingPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    setModalConfig({
+      title: 'Copied!',
+      message: 'Content copied to clipboard.',
+      type: 'success',
+    });
+    setIsModalOpen(true);
   };
 
   const downloadPDF = async (pdfData: any, contentName?: string) => {
@@ -161,7 +178,12 @@ export default function ClientMarketingPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      setModalConfig({
+        title: 'Download Failed',
+        message: 'Failed to download PDF. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setDownloadingPdf(false);
     }
@@ -253,7 +275,12 @@ export default function ClientMarketingPage() {
       setEditedPdfData(null);
     } catch (error) {
       console.error('Error saving PDF edit:', error);
-      alert('Failed to save PDF changes. Please try again.');
+      setModalConfig({
+        title: 'Save Failed',
+        message: 'Failed to save PDF changes. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setSavingPdf(false);
     }
@@ -316,7 +343,12 @@ export default function ClientMarketingPage() {
       setEditedContent('');
     } catch (error) {
       console.error('Error saving content edit:', error);
-      alert('Failed to save content changes. Please try again.');
+      setModalConfig({
+        title: 'Save Failed',
+        message: 'Failed to save content changes. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setSavingContent(false);
     }
@@ -414,10 +446,20 @@ export default function ClientMarketingPage() {
         setClient(clientData);
       }
 
-      alert(`Variant ${variantLetter} generated successfully!`);
+      setModalConfig({
+        title: 'Variant Generated!',
+        message: `Variant ${variantLetter} generated successfully!`,
+        type: 'success',
+      });
+      setIsModalOpen(true);
     } catch (error) {
       console.error('Error generating variant:', error);
-      alert('Failed to generate variant. Please try again.');
+      setModalConfig({
+        title: 'Generation Failed',
+        message: 'Failed to generate variant. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setGeneratingVariant(false);
       setGeneratingVariantId(null);
@@ -954,6 +996,15 @@ export default function ClientMarketingPage() {
           </div>
         </div>
       )}
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }

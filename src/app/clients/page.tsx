@@ -169,7 +169,7 @@ export default function ClientsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
         <Navbar />
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -177,12 +177,12 @@ export default function ClientsPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Clients</h1>
-                <p className="text-gray-600">Manage all your clients and their information</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent mb-2">Clients</h1>
+                <p className="text-gray-700">Manage all your clients and their information</p>
               </div>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all flex items-center"
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -199,32 +199,32 @@ export default function ClientsPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
               <p className="text-sm text-gray-600">Total Clients</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{clients.length}</p>
+              <p className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mt-1">{clients.length}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
               <p className="text-sm text-gray-600">Active Onboarding</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+              <p className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mt-1">
                 {clients.filter((c) => !['completed', 'proposal_accepted'].includes(c.onboardingStage)).length}
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
               <p className="text-sm text-gray-600">Awaiting Response</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+              <p className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mt-1">
                 {clients.filter((c) => c.onboardingStage === 'discovery_sent').length}
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
               <p className="text-sm text-gray-600">Proposals Accepted</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+              <p className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mt-1">
                 {clients.filter((c) => c.onboardingStage === 'proposal_accepted').length}
               </p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -235,7 +235,7 @@ export default function ClientsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name, email, or company..."
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border border-cyan-200 rounded-lg px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
               <div>
@@ -245,7 +245,7 @@ export default function ClientsPage() {
                 <select
                   value={filterStage}
                   onChange={(e) => setFilterStage(e.target.value as OnboardingStage | 'all')}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="w-full border border-cyan-200 rounded-lg px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 >
                   <option value="all">All Stages</option>
                   {Object.entries(STAGE_LABELS).map(([stage, label]) => (
@@ -259,34 +259,34 @@ export default function ClientsPage() {
           </div>
 
           {/* Client List */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-cyan-100">
+              <thead className="bg-gradient-to-r from-cyan-50 to-blue-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Client
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Company
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Industry
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Stage
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Added
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white/95 divide-y divide-cyan-100">
                 {filteredClients.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-600">
                       {searchTerm || filterStage !== 'all'
                         ? 'No clients match your filters'
                         : 'No clients yet. Click "Add Client" to get started.'}
@@ -294,11 +294,11 @@ export default function ClientsPage() {
                   </tr>
                 ) : (
                   filteredClients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={client.id} className="hover:bg-cyan-50/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                          <div className="text-sm text-gray-500">{client.email}</div>
+                          <div className="text-sm text-gray-600">{client.email}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -316,19 +316,19 @@ export default function ClientsPage() {
                           {STAGE_LABELS[client.onboardingStage]}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {client.createdAt.toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => handleViewClient(client)}
-                          className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all mr-3"
+                          className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-3 py-1.5 rounded-lg font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-sm mr-3"
                         >
                           Copy Onboarding Link
                         </button>
                         <button
                           onClick={() => handleEditClient(client)}
-                          className="text-blue-600 hover:text-blue-900 mr-3 inline-flex items-center"
+                          className="text-cyan-600 hover:text-cyan-800 mr-3 inline-flex items-center"
                           title="Edit client"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

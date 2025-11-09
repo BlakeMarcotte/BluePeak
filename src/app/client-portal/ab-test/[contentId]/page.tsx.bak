@@ -68,12 +68,7 @@ export default function ABTestPage() {
       }
     } catch (error) {
       console.error('Error generating PDF preview:', error);
-      setModalConfig({
-        title: 'Preview Failed',
-        message: 'Failed to generate PDF preview. Please try again.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+      alert('Failed to generate PDF preview. Please try again.');
     } finally {
       if (type === 'original') {
         setLoadingOriginalPdf(false);
@@ -132,22 +127,12 @@ export default function ABTestPage() {
             }
           }
         } else {
-          setModalConfig({
-        title: 'Not Found',
-        message: 'Content not found.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+          alert('Content not found');
           router.push('/client-portal/marketing');
         }
       } catch (error) {
         console.error('Error fetching client profile:', error);
-        setModalConfig({
-        title: 'Error',
-        message: 'Failed to load your profile.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+        alert('Failed to load your profile');
       } finally {
         setLoading(false);
       }
@@ -303,20 +288,10 @@ export default function ABTestPage() {
         generatePdfPreview(result.pdfData, client, 'variant');
       }
 
-      setModalConfig({
-        title: 'Success!',
-        message: regenerate ? 'Variant B regenerated successfully!' : 'Variant B generated and saved!',
-        type: 'success',
-      });
-      setIsModalOpen(true);
+      alert(regenerate ? 'Variant B regenerated successfully!' : 'Variant B generated and saved!');
     } catch (error) {
       console.error('Error generating variant:', error);
-      setModalConfig({
-        title: 'Generation Failed',
-        message: 'Failed to generate variant. Please try again.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+      alert('Failed to generate variant. Please try again.');
     } finally {
       setGeneratingVariant(false);
     }
@@ -324,12 +299,7 @@ export default function ABTestPage() {
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    setModalConfig({
-        title: 'Copied!',
-        message: `${label} copied to clipboard!`,
-        type: 'success',
-      });
-      setIsModalOpen(true);
+    alert(`${label} copied to clipboard!`);
   };
 
   const downloadPDF = async (pdfData: any, contentName: string) => {
@@ -361,12 +331,7 @@ export default function ABTestPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      setModalConfig({
-        title: 'Download Failed',
-        message: 'Failed to download PDF. Please try again.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+      alert('Failed to download PDF. Please try again.');
     }
   };
 
@@ -460,20 +425,10 @@ export default function ABTestPage() {
 
       setEditingPdfId(null);
       setEditedPdfData(null);
-      setModalConfig({
-        title: 'Saved!',
-        message: 'PDF changes saved successfully!',
-        type: 'success',
-      });
-      setIsModalOpen(true);
+      alert('PDF changes saved successfully!');
     } catch (error) {
       console.error('Error saving PDF edit:', error);
-      setModalConfig({
-        title: 'Save Failed',
-        message: 'Failed to save PDF changes. Please try again.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+      alert('Failed to save PDF changes. Please try again.');
     } finally {
       setSavingPdf(false);
     }
@@ -541,20 +496,10 @@ export default function ABTestPage() {
 
       setEditingContentId(null);
       setEditedContent('');
-      setModalConfig({
-        title: 'Saved!',
-        message: 'Content saved successfully!',
-        type: 'success',
-      });
-      setIsModalOpen(true);
+      alert('Content saved successfully!');
     } catch (error) {
       console.error('Error saving content edit:', error);
-      setModalConfig({
-        title: 'Save Failed',
-        message: 'Failed to save content changes. Please try again.',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+      alert('Failed to save content changes. Please try again.');
     } finally {
       setSavingContent(false);
     }
@@ -562,12 +507,7 @@ export default function ABTestPage() {
 
   const generatePublicVoteLink = async () => {
     if (!client || !originalContent || !variantContent) {
-      setModalConfig({
-        title: 'Missing Content',
-        message: 'You need both an original and a variant to generate a voting link.',
-        type: 'warning',
-      });
-      setIsModalOpen(true);
+      alert('You need both an original and a variant to generate a voting link.');
       return;
     }
 
@@ -617,12 +557,7 @@ export default function ABTestPage() {
       }
     } catch (error) {
       console.error('Error generating vote link:', error);
-      setModalConfig({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'Failed to generate vote link',
-        type: 'error',
-      });
-      setIsModalOpen(true);
+      alert(error instanceof Error ? error.message : 'Failed to generate vote link');
     } finally {
       setGeneratingLink(false);
     }

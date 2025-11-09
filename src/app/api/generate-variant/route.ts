@@ -151,6 +151,8 @@ ${originalContent}
 Topic: ${topic}
 Target Audience: ${targetAudience}${brandContext}${voiceContext}
 
+IMPORTANT: This variant will use the EXACT SAME visual theme, colors, and layout as the original. You are ONLY varying the messaging and content.
+
 Create a VARIANT version testing different angles. You must respond with ONLY a valid JSON object (no markdown code blocks, no explanation) with this exact structure:
 {
   "headline": "DIFFERENT compelling headline approach (max 60 characters)",
@@ -170,7 +172,8 @@ Variant Requirements:
 - Reword benefits emphasizing different aspects
 - Keep same stats but can vary labels slightly
 - Test different CTA wording
-- Maintain same tone but explore variations
+- Maintain same brand tone but explore messaging variations
+- The visual design (colors, layout, theme) will remain identical to the original
 
 Return ONLY the JSON object, no other text:`;
 

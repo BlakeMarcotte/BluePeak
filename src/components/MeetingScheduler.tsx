@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Modal from './Modal';
 
 interface TimeSlot {
   date: Date;
@@ -16,6 +17,12 @@ interface MeetingSchedulerProps {
 export default function MeetingScheduler({ clientId, onScheduled }: MeetingSchedulerProps) {
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'error' as 'error',
+  });
 
   // Generate available time slots for next 2 weeks
   // Mon-Fri, 9am-5pm EST, 30-min slots
@@ -97,7 +104,12 @@ export default function MeetingScheduler({ clientId, onScheduled }: MeetingSched
       onScheduled(selectedSlot);
     } catch (error) {
       console.error('Error scheduling meeting:', error);
-      alert('Failed to schedule meeting. Please try again.');
+      setModalConfig({
+        title: 'Scheduling Failed',
+        message: 'Failed to schedule meeting. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     } finally {
       setIsScheduling(false);
     }
@@ -169,6 +181,15 @@ export default function MeetingScheduler({ clientId, onScheduled }: MeetingSched
       <div className="mt-6 text-sm text-gray-500">
         <p>All times shown in Eastern Time (ET). Meeting duration: 30 minutes.</p>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }
