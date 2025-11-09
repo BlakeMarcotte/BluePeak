@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import AddClientModal from '@/components/AddClientModal';
+import Modal from '@/components/Modal';
 import { Client, OnboardingStage } from '@/types';
 
 const STAGE_LABELS: Record<OnboardingStage, string> = {
@@ -22,6 +23,13 @@ const STAGE_COLORS: Record<OnboardingStage, string> = {
   proposal_accepted: 'bg-green-100 text-green-800',
 };
 
+interface ModalConfig {
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'error' | 'warning' | 'confirm';
+  onConfirm?: () => void;
+}
+
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,6 +37,12 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStage, setFilterStage] = useState<OnboardingStage | 'all'>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
+    title: '',
+    message: '',
+    type: 'info',
+  });
 
   // Fetch clients on mount
   useEffect(() => {
@@ -89,35 +103,57 @@ export default function ClientsPage() {
     if (client.discoveryLinkId) {
       const link = `${window.location.origin}/portal/${client.discoveryLinkId}`;
       navigator.clipboard.writeText(link);
-      alert(`Discovery link copied to clipboard!\n\n${link}\n\nShare this with ${client.name} to complete their discovery questionnaire.`);
+      setModalConfig({
+        title: 'Link Copied!',
+        message: `Discovery link copied to clipboard!\n\n${link}\n\nShare this with ${client.name} to complete their discovery questionnaire.`,
+        type: 'success',
+      });
+      setIsNotificationOpen(true);
     } else {
-      alert('No discovery link available for this client.');
+      setModalConfig({
+        title: 'No Link Available',
+        message: 'No discovery link available for this client.',
+        type: 'warning',
+      });
+      setIsNotificationOpen(true);
     }
   };
 
   const handleDeleteClient = async (client: Client) => {
-    // Confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${client.name} from ${client.company}?\n\nThis action cannot be undone.`
-    );
+    // Show confirmation dialog
+    setModalConfig({
+      title: 'Delete Client',
+      message: `Are you sure you want to delete ${client.name} from ${client.company}?\n\nThis action cannot be undone.`,
+      type: 'confirm',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/clients?id=${client.id}`, {
+            method: 'DELETE',
+          });
 
-    if (!confirmed) return;
+          if (!response.ok) throw new Error('Failed to delete client');
 
-    try {
-      const response = await fetch(`/api/clients?id=${client.id}`, {
-        method: 'DELETE',
-      });
+          // Remove client from local state
+          setClients(clients.filter((c) => c.id !== client.id));
 
-      if (!response.ok) throw new Error('Failed to delete client');
-
-      // Remove client from local state
-      setClients(clients.filter((c) => c.id !== client.id));
-
-      alert(`${client.name} has been successfully deleted.`);
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      alert('Failed to delete client. Please try again.');
-    }
+          setModalConfig({
+            title: 'Client Deleted',
+            message: `${client.name} has been successfully deleted.`,
+            type: 'success',
+          });
+          setIsNotificationOpen(true);
+        } catch (error) {
+          console.error('Error deleting client:', error);
+          setModalConfig({
+            title: 'Delete Failed',
+            message: 'Failed to delete client. Please try again.',
+            type: 'error',
+          });
+          setIsNotificationOpen(true);
+        }
+      },
+    });
+    setIsNotificationOpen(true);
   };
 
   const filteredClients = clients.filter((client) => {
@@ -334,6 +370,16 @@ export default function ClientsPage() {
         onClientAdded={handleClientAdded}
         isQuickAdd={false}
         clientToEdit={clientToEdit}
+      />
+
+      {/* Notification Modal */}
+      <Modal
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
       />
     </ProtectedRoute>
   );

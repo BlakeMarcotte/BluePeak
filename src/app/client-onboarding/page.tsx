@@ -5,12 +5,19 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import OnboardingPipeline from '@/components/OnboardingPipeline';
 import ProgressReportGenerator from '@/components/ProgressReportGenerator';
+import Modal from '@/components/Modal';
 import { Client } from '@/types';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import confetti from 'canvas-confetti';
 
 type TabType = 'pipeline' | 'reports';
+
+interface ModalConfig {
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'error' | 'warning';
+}
 
 export default function ClientOnboardingPage() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
@@ -19,6 +26,12 @@ export default function ClientOnboardingPage() {
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
+    title: '',
+    message: '',
+    type: 'info',
+  });
 
   // Fetch clients on mount - filter for active onboarding only
   useEffect(() => {
@@ -67,7 +80,12 @@ export default function ClientOnboardingPage() {
       );
     } catch (error) {
       console.error('Error updating client:', error);
-      alert('Failed to update client. Please try again.');
+      setModalConfig({
+        title: 'Update Failed',
+        message: 'Failed to update client. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     }
   };
 
@@ -81,13 +99,23 @@ export default function ClientOnboardingPage() {
     // Copy link to clipboard
     const link = `${window.location.origin}/portal/${client.discoveryLinkId}`;
     navigator.clipboard.writeText(link);
-    alert(`Discovery link sent to ${client.email}!\n\nLink copied to clipboard:\n${link}`);
+    setModalConfig({
+      title: 'Discovery Link Sent',
+      message: `Discovery link sent to ${client.email}!\n\nLink copied to clipboard:\n${link}`,
+      type: 'success',
+    });
+    setIsModalOpen(true);
   };
 
   const handleGenerateProposal = async (clientId: string) => {
     const client = clients.find((c) => c.id === clientId);
     if (!client || !client.conversationHistory) {
-      alert('No discovery conversation found for this client.');
+      setModalConfig({
+        title: 'Discovery Required',
+        message: 'No discovery conversation found for this client.',
+        type: 'warning',
+      });
+      setIsModalOpen(true);
       return;
     }
 
@@ -205,7 +233,12 @@ export default function ClientOnboardingPage() {
     } catch (error) {
       console.error('Error generating proposal:', error);
       setIsGeneratingProposal(false);
-      alert('Failed to generate proposal. Please try again.');
+      setModalConfig({
+        title: 'Generation Failed',
+        message: 'Failed to generate proposal. Please try again.',
+        type: 'error',
+      });
+      setIsModalOpen(true);
     }
   };
 
@@ -476,6 +509,15 @@ export default function ClientOnboardingPage() {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </ProtectedRoute>
   );
 }

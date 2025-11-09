@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import Image from 'next/image';
+import Link from 'next/link';
 
 function LoginForm() {
   const router = useRouter();
@@ -96,12 +98,51 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+      {/* Decorative Circles */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-cyan-200 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-200 rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+
+      <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full p-8">
+        {/* Back to Home Link */}
+        <div className="mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-cyan-600 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
+
+        {/* Logo & Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">BluePeak Marketing</h1>
-          <p className="text-gray-600">Client Portal Login</p>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+              alt="BluePeak Logo"
+              width={120}
+              height={120}
+              className="object-contain"
+              priority
+            />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent mb-2">
+            Client Portal
+          </h1>
+          <p className="text-gray-600">Sign in to access your materials</p>
         </div>
 
         {/* Success Message */}
@@ -124,7 +165,7 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -139,7 +180,7 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="Enter your password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -154,33 +195,17 @@ function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
           >
             {isLoading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>
-            Don't have an account?{' '}
-            <span className="text-gray-500">Complete your discovery questionnaire to get started.</span>
-          </p>
-        </div>
-
-        <div className="mt-4 text-center text-sm text-gray-500">
-          <p>
-            Need help? Email us at{' '}
-            <a href="mailto:hello@bluepeak.com" className="text-purple-600 hover:underline">
-              hello@bluepeak.com
-            </a>
-          </p>
-        </div>
-
         <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
           <p>
             BluePeak team member?{' '}
-            <a href="/login" className="text-purple-600 hover:text-purple-700 font-medium">
+            <a href="/login" className="text-cyan-600 hover:text-cyan-700 font-medium">
               Use internal login
             </a>
           </p>
@@ -193,9 +218,9 @@ function LoginForm() {
 export default function ClientLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>

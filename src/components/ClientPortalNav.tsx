@@ -19,14 +19,14 @@ export default function ClientPortalNav() {
   ];
 
   return (
-    <header className="bg-white shadow">
+    <header className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <div className="flex items-center gap-8">
             <Link href="/client-portal/dashboard" className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">BluePeak Marketing</h1>
-              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent">BluePeak Marketing</h1>
+              <span className="text-xs bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-2 py-1 rounded-full font-medium">
                 Client Portal
               </span>
             </Link>
@@ -41,8 +41,8 @@ export default function ClientPortalNav() {
                     href={link.href}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                       isActive
-                        ? 'bg-purple-50 text-purple-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
+                        : 'text-gray-600 hover:bg-cyan-50 hover:text-cyan-700'
                     }`}
                   >
                     <span>{link.icon}</span>
@@ -74,8 +74,8 @@ export default function ClientPortalNav() {
                 href={link.href}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
                   isActive
-                    ? 'bg-purple-50 text-purple-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white'
+                    : 'text-gray-600 hover:bg-cyan-50 hover:text-cyan-700'
                 }`}
               >
                 <span>{link.icon}</span>

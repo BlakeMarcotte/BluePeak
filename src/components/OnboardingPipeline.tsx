@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Client, OnboardingStage } from '@/types';
+import Modal from './Modal';
 
 interface OnboardingPipelineProps {
   client: Client;
@@ -41,6 +43,13 @@ export default function OnboardingPipeline({
   onGenerateProposal,
   onSendProposal,
 }: OnboardingPipelineProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'success' | 'error' | 'warning',
+  });
+
   const currentStageIndex = STAGES.findIndex((s) => s.stage === client.onboardingStage);
 
   // If proposal has been generated but still at discovery_complete, treat discovery as complete
@@ -286,7 +295,12 @@ export default function OnboardingPipeline({
               onClick={() => {
                 const link = `${window.location.origin}/portal/${client.discoveryLinkId}`;
                 navigator.clipboard.writeText(link);
-                alert('Discovery link copied to clipboard!');
+                setModalConfig({
+                  title: 'Link Copied!',
+                  message: 'Discovery link copied to clipboard!',
+                  type: 'success',
+                });
+                setIsModalOpen(true);
               }}
               className="px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
             >
@@ -295,6 +309,15 @@ export default function OnboardingPipeline({
           )}
         </div>
       </div>
+
+      {/* Notification Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }
