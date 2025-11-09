@@ -743,13 +743,13 @@ export default function ABTestPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
         <ClientPortalNav />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white border border-slate-200 rounded-lg p-8">
+          <div className="bg-white/95 backdrop-blur-sm border border-cyan-200 rounded-xl shadow-lg p-8">
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-3"></div>
-              <p className="text-slate-700">Loading A/B test...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 mr-3"></div>
+              <p className="text-gray-700">Loading A/B test...</p>
             </div>
           </div>
         </main>
@@ -763,11 +763,11 @@ export default function ABTestPage() {
     const isPDF = item.type === 'pdf-onepager' && item.pdfData;
 
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-6">
+      <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">{item.name}</h3>
-            <p className="text-sm text-slate-500">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
+            <p className="text-sm text-gray-600">
               {item.wordCount && `${item.wordCount} words`}
               {item.characterCount && ` • ${item.characterCount} characters`}
             </p>
@@ -777,13 +777,13 @@ export default function ABTestPage() {
               <>
                 <button
                   onClick={() => downloadPDF(item.pdfData, `${item.name}_${label}`)}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 rounded-lg transition-all shadow-md"
                 >
                   Download PDF
                 </button>
                 <button
                   onClick={() => startEditingPdf(item.id!, item.pdfData)}
-                  className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
                 >
                   Edit PDF Content
                 </button>
@@ -792,13 +792,13 @@ export default function ABTestPage() {
               <>
                 <button
                   onClick={() => startEditingContent(item.id!, item.content)}
-                  className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => copyToClipboard(item.content, label)}
-                  className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50 rounded-lg transition-colors border border-cyan-200"
                 >
                   Copy
                 </button>
@@ -813,28 +813,28 @@ export default function ABTestPage() {
             /* PDF Preview as iframe */
             <div className="w-full">
               {loadingPdf ? (
-                <div className="flex items-center justify-center h-96 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-center h-96 bg-cyan-50/50 rounded-lg border border-cyan-100">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                    <p className="text-slate-600">Generating PDF preview...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+                    <p className="text-gray-700">Generating PDF preview...</p>
                   </div>
                 </div>
               ) : pdfUrl ? (
                 <iframe
                   src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                  className="w-full h-[600px] border border-slate-300 rounded-lg"
+                  className="w-full h-[600px] border border-cyan-200 rounded-lg shadow-inner"
                   title={`${label} PDF Preview`}
                 />
               ) : (
-                <div className="flex items-center justify-center h-96 bg-slate-50 rounded-lg">
-                  <p className="text-slate-600">PDF preview not available</p>
+                <div className="flex items-center justify-center h-96 bg-cyan-50/50 rounded-lg border border-cyan-100">
+                  <p className="text-gray-700">PDF preview not available</p>
                 </div>
               )}
             </div>
           ) : (
             /* Regular Content Display */
             <div className="prose prose-sm max-w-none">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-lg">
+              <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200">
                 {item.content}
               </pre>
             </div>
@@ -845,31 +845,31 @@ export default function ABTestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
       <ClientPortalNav />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push('/client-portal/marketing')}
-            className="text-indigo-600 hover:text-indigo-700 mb-4 flex items-center gap-1"
+            className="text-cyan-700 hover:text-cyan-800 mb-4 flex items-center gap-1 font-medium"
           >
             ← Back to Marketing Content
           </button>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">A/B Test Comparison</h1>
-          <p className="text-slate-600">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent mb-2">A/B Test Comparison</h1>
+          <p className="text-gray-700">
             Compare different versions of your content to find what resonates best
           </p>
         </div>
 
         {/* Generate/Regenerate Variant Button */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl shadow-md p-6 mb-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {variantContent ? '🔄 Regenerate Test Variant' : '🔬 Generate a Test Variant'}
               </h3>
-              <p className="text-slate-600 text-sm mb-4">
+              <p className="text-gray-700 text-sm mb-4">
                 {variantContent
                   ? "Don't like the current variant? Generate a new one with different angles and messaging."
                   : "Create an alternative version of this content with different headlines, CTAs, and messaging to test what performs better."
@@ -879,7 +879,7 @@ export default function ABTestPage() {
             <button
               onClick={() => generateVariant(!!variantContent)}
               disabled={generatingVariant}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2"
             >
               {generatingVariant ? (
                 <>
@@ -895,27 +895,27 @@ export default function ABTestPage() {
 
         {/* Public Voting Link Section */}
         {variantContent && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl shadow-md p-6 mb-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   🔗 Share for Public Voting
                 </h3>
-                <p className="text-slate-600 text-sm mb-3">
+                <p className="text-gray-700 text-sm mb-3">
                   {publicVoteId
                     ? 'Share this link with others to get their feedback on which version performs better.'
                     : 'Generate a public link to share with others and collect votes on which version they prefer.'
                   }
                 </p>
                 {publicVoteId && (
-                  <div className="bg-white border border-slate-300 rounded-lg p-3 mb-3">
+                  <div className="bg-white border border-cyan-200 rounded-lg p-3 mb-3 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <code className="text-sm text-slate-700 break-all flex-1 mr-3">
+                      <code className="text-sm text-gray-800 break-all flex-1 mr-3">
                         {`${window.location.origin}/vote/${publicVoteId}`}
                       </code>
                       <button
                         onClick={copyVoteLink}
-                        className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-md transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-sm font-medium text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50 rounded-lg transition-colors whitespace-nowrap border border-cyan-200"
                       >
                         {showLinkCopied ? '✓ Copied!' : 'Copy Link'}
                       </button>
@@ -927,7 +927,7 @@ export default function ABTestPage() {
                 <button
                   onClick={generatePublicVoteLink}
                   disabled={generatingLink}
-                  className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 ml-4"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-medium rounded-lg hover:from-emerald-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2 ml-4"
                 >
                   {generatingLink ? (
                     <>
@@ -948,28 +948,28 @@ export default function ABTestPage() {
 
         {/* Vote Results */}
         {variantContent && publicVoteId && (originalContent.votes || 0) + (variantContent.votes || 0) > 0 && (
-          <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">📊 Voting Results</h3>
+          <div className="bg-white/95 backdrop-blur-sm border border-cyan-100 rounded-xl shadow-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Voting Results</h3>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-gray-700">
                       {originalContent.variantLabel || 'Original'}
                     </span>
-                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
                       {originalContent.votes || 0} {(originalContent.votes || 0) === 1 ? 'vote' : 'votes'}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-sm font-semibold text-gray-900">
                     {((originalContent.votes || 0) + (variantContent.votes || 0)) > 0
                       ? Math.round(((originalContent.votes || 0) / ((originalContent.votes || 0) + (variantContent.votes || 0))) * 100)
                       : 0}%
                   </span>
                 </div>
-                <div className="w-full bg-slate-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
-                    className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
                     style={{
                       width: `${((originalContent.votes || 0) + (variantContent.votes || 0)) > 0
                         ? Math.round(((originalContent.votes || 0) / ((originalContent.votes || 0) + (variantContent.votes || 0))) * 100)
@@ -981,22 +981,22 @@ export default function ABTestPage() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-gray-700">
                       {variantContent.variantLabel || 'Variant'}
                     </span>
-                    <span className="px-2 py-0.5 text-xs font-medium bg-cyan-100 text-cyan-700 rounded">
+                    <span className="px-2 py-0.5 text-xs font-medium bg-cyan-100 text-cyan-700 rounded-full">
                       {variantContent.votes || 0} {(variantContent.votes || 0) === 1 ? 'vote' : 'votes'}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-sm font-semibold text-gray-900">
                     {((originalContent.votes || 0) + (variantContent.votes || 0)) > 0
                       ? Math.round(((variantContent.votes || 0) / ((originalContent.votes || 0) + (variantContent.votes || 0))) * 100)
                       : 0}%
                   </span>
                 </div>
-                <div className="w-full bg-slate-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
-                    className="bg-cyan-600 h-3 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-cyan-500 to-cyan-600 h-3 rounded-full transition-all duration-500"
                     style={{
                       width: `${((originalContent.votes || 0) + (variantContent.votes || 0)) > 0
                         ? Math.round(((variantContent.votes || 0) / ((originalContent.votes || 0) + (variantContent.votes || 0))) * 100)
@@ -1006,7 +1006,7 @@ export default function ABTestPage() {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-slate-500 mt-4 text-center">
+            <p className="text-xs text-gray-600 mt-4 text-center">
               Total votes: {(originalContent.votes || 0) + (variantContent.votes || 0)}
             </p>
           </div>
@@ -1016,19 +1016,19 @@ export default function ABTestPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Original Version */}
           <div>
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Version A (Original)</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Version A (Original)</h2>
             {renderContent(originalContent, 'Original', originalPdfUrl, loadingOriginalPdf)}
           </div>
 
           {/* Variant Version */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">Version B (Variant)</h2>
+              <h2 className="text-xl font-bold text-gray-900">Version B (Variant)</h2>
               {variantContent && (
                 <button
                   onClick={promoteVariantToOriginal}
                   disabled={generatingVariant}
-                  className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2"
                   title="Make this variant the new original"
                 >
                   <span>⭐</span>
@@ -1039,12 +1039,12 @@ export default function ABTestPage() {
             {variantContent ? (
               renderContent(variantContent, 'Variant B', variantPdfUrl, loadingVariantPdf)
             ) : (
-              <div className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
+              <div className="bg-white/95 backdrop-blur-sm border-2 border-dashed border-cyan-200 rounded-xl shadow-lg p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
                 <div className="text-6xl mb-4">🔬</div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   No Variant Yet
                 </h3>
-                <p className="text-slate-600 max-w-sm">
+                <p className="text-gray-700 max-w-sm">
                   Click the "Generate Variant" button above to create an alternative version for testing
                 </p>
               </div>
@@ -1054,25 +1054,25 @@ export default function ABTestPage() {
 
         {/* Tips Section */}
         {variantContent && (
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">
+          <div className="mt-8 bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
               💡 A/B Testing Tips
             </h3>
-            <ul className="space-y-2 text-sm text-slate-700">
+            <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
+                <span className="text-cyan-600 mr-2">•</span>
                 <span><strong>Track results:</strong> Use these variants in different campaigns and measure which performs better</span>
               </li>
               <li className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
+                <span className="text-cyan-600 mr-2">•</span>
                 <span><strong>Test one element:</strong> The variant changes headlines, CTAs, and structure - focus on overall performance</span>
               </li>
               <li className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
+                <span className="text-cyan-600 mr-2">•</span>
                 <span><strong>Give it time:</strong> Run tests for at least a week to get meaningful results</span>
               </li>
               <li className="flex items-start">
-                <span className="text-blue-600 mr-2">•</span>
+                <span className="text-cyan-600 mr-2">•</span>
                 <span><strong>Don't like this variant?</strong> Generate a new one by clicking the button again</span>
               </li>
             </ul>
@@ -1083,11 +1083,11 @@ export default function ABTestPage() {
       {/* PDF Edit Modal */}
       {editingPdfId && editedPdfData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-cyan-100">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
-              <h2 className="text-xl font-bold text-slate-900">Edit PDF Content</h2>
-              <p className="text-sm text-slate-600 mt-1">
+            <div className="sticky top-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-200 px-6 py-4 rounded-t-2xl">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent">Edit PDF Content</h2>
+              <p className="text-sm text-gray-700 mt-1">
                 Edit your PDF content below. Character limits help maintain proper layout.
               </p>
             </div>
@@ -1271,18 +1271,18 @@ export default function ABTestPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+            <div className="sticky bottom-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-t border-cyan-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
               <button
                 onClick={cancelEditingPdf}
                 disabled={savingPdf}
-                className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors border border-gray-300"
               >
                 Cancel
               </button>
               <button
                 onClick={() => savePdfEdit(editingPdfId)}
                 disabled={savingPdf}
-                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2"
               >
                 {savingPdf && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -1297,11 +1297,11 @@ export default function ABTestPage() {
       {/* Text Content Edit Modal */}
       {editingContentId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border-2 border-cyan-100">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4">
-              <h2 className="text-xl font-bold text-slate-900">Edit Content</h2>
-              <p className="text-sm text-slate-600 mt-1">
+            <div className="sticky top-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-200 px-6 py-4 rounded-t-2xl">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent">Edit Content</h2>
+              <p className="text-sm text-gray-700 mt-1">
                 Edit your {originalContent?.type || ''} content below.
                 {originalContent?.type === 'linkedin' && ' LinkedIn has a 1,300 character limit.'}
                 {originalContent?.type === 'twitter' && ' Keep tweets under 280 characters each.'}
@@ -1346,18 +1346,18 @@ export default function ABTestPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+            <div className="sticky bottom-0 bg-gradient-to-r from-cyan-50 to-blue-50 border-t border-cyan-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
               <button
                 onClick={cancelEditingContent}
                 disabled={savingContent}
-                className="px-4 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors border border-gray-300"
               >
                 Cancel
               </button>
               <button
                 onClick={() => saveContentEdit(editingContentId)}
                 disabled={savingContent || (originalContent?.type === 'linkedin' && editedContent.length > 1300)}
-                className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center gap-2"
               >
                 {savingContent && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -1368,6 +1368,15 @@ export default function ABTestPage() {
           </div>
         </div>
       )}
+
+      {/* Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
     </div>
   );
 }
