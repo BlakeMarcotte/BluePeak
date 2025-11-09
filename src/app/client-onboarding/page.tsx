@@ -319,7 +319,7 @@ export default function ClientOnboardingPage() {
                   onClick={() => setActiveTab('pipeline')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === 'pipeline'
-                      ? 'border-purple-600 text-purple-600'
+                      ? 'border-blue-600 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -329,7 +329,7 @@ export default function ClientOnboardingPage() {
                   onClick={() => setActiveTab('reports')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === 'reports'
-                      ? 'border-purple-600 text-purple-600'
+                      ? 'border-blue-600 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -454,9 +454,9 @@ export default function ClientOnboardingPage() {
             <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-8 z-10">
               <div className="text-center">
                 {/* Icon */}
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 mb-4">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
                   <svg
-                    className="h-8 w-8 text-purple-600 animate-spin"
+                    className="h-8 w-8 text-blue-600 animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -490,7 +490,7 @@ export default function ClientOnboardingPage() {
                 {/* Progress Bar */}
                 <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                   <div
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 h-3 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${generationProgress}%` }}
                   ></div>
                 </div>
