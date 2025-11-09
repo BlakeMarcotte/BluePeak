@@ -355,7 +355,11 @@ export default function ClientMarketingPage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to generate variant');
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMsg = errorData.details || errorData.error || 'Failed to generate variant';
+        throw new Error(errorMsg);
+      }
 
       const result = await response.json();
 

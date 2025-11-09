@@ -267,8 +267,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating variant:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to generate variant' },
+      {
+        error: 'Failed to generate variant',
+        details: errorMessage
+      },
       { status: 500 }
     );
   }
