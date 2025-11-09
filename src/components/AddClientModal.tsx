@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Client } from '@/types';
+import Modal from './Modal';
 
 interface AddClientModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export default function AddClientModal({
     phone: clientToEdit?.phone || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const formatPhoneNumber = (value: string) => {
     // Remove all non-digits
@@ -134,7 +137,8 @@ export default function AddClientModal({
       onClose();
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'adding'} client:`, error);
-      alert(`Failed to ${isEditMode ? 'update' : 'add'} client. Please try again.`);
+      setErrorMessage(`Failed to ${isEditMode ? 'update' : 'add'} client. Please try again.`);
+      setIsErrorModalOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -273,6 +277,15 @@ export default function AddClientModal({
           </form>
         </div>
       </div>
+
+      {/* Error Modal */}
+      <Modal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        title={isEditMode ? 'Update Failed' : 'Add Failed'}
+        message={errorMessage}
+        type="error"
+      />
     </div>
   );
 }

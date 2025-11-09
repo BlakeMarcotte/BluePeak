@@ -111,27 +111,27 @@ export default function ClientDashboardPage() {
   };
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-100">
       <ClientPortalNav />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg p-8 text-white mb-8">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white mb-8">
           <h2 className="text-3xl font-bold mb-2">
             Welcome back, {client?.name || user?.displayName}!
           </h2>
-          <p className="text-purple-100">
+          <p className="text-cyan-50">
             Here's an overview of your marketing journey with BluePeak
           </p>
         </div>
@@ -139,7 +139,7 @@ export default function ClientDashboardPage() {
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Onboarding Status Card */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-cyan-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Onboarding Status</h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export default function ClientDashboardPage() {
           </div>
 
           {/* Company Info Card */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-cyan-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Company</h3>
             <div className="space-y-2">
               <div>
@@ -187,7 +187,7 @@ export default function ClientDashboardPage() {
           </div>
 
           {/* Quick Actions Card */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-cyan-100">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-2">
               {client?.proposal?.pdfUrl && (
@@ -195,14 +195,14 @@ export default function ClientDashboardPage() {
                   href={client.proposal.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full block text-left px-4 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-900 font-medium text-sm transition-colors"
+                  className="w-full block text-left px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white font-medium text-sm transition-all shadow-sm"
                 >
                   View Proposal
                 </a>
               )}
               <button
                 onClick={() => router.push('/client-portal/marketing')}
-                className="w-full text-left px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-900 font-medium text-sm transition-colors"
+                className="w-full text-left px-4 py-2 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-900 font-medium text-sm transition-colors"
               >
                 Content Library
               </button>
@@ -212,7 +212,7 @@ export default function ClientDashboardPage() {
 
         {/* Proposal Section */}
         {client?.proposal && !showScheduler ? (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-cyan-100">
             <h3 className="text-2xl font-semibold text-gray-900 mb-6">Your Marketing Proposal</h3>
 
             {/* Action Buttons */}
@@ -221,7 +221,7 @@ export default function ClientDashboardPage() {
                 href={client.proposal!.pdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors inline-flex items-center"
+                className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-6 py-2 rounded-lg font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg inline-flex items-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -231,7 +231,7 @@ export default function ClientDashboardPage() {
               </a>
               <button
                 onClick={() => downloadPDF(client.proposal!.pdfUrl, `${client.company}_Proposal.pdf`)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg inline-flex items-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -242,14 +242,14 @@ export default function ClientDashboardPage() {
 
             {/* Meeting CTA */}
             {!client.proposal!.proposalMeetingDate ? (
-              <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
-                <h4 className="text-lg font-semibold text-purple-900 mb-2">Next Step: Schedule Your Discussion</h4>
-                <p className="text-purple-800 mb-4">
+              <div className="mt-6 bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-6">
+                <h4 className="text-lg font-semibold text-cyan-900 mb-2">Next Step: Schedule Your Discussion</h4>
+                <p className="text-cyan-800 mb-4">
                   Let's discuss this proposal in detail. Select a time that works best for you.
                 </p>
                 <button
                   onClick={() => setShowScheduler(true)}
-                  className="bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-md"
                 >
                   Schedule Meeting
                 </button>
@@ -313,11 +313,11 @@ export default function ClientDashboardPage() {
             <MeetingScheduler clientId={client.id} onScheduled={handleMeetingScheduled} />
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-8 border border-cyan-100">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Marketing Proposal</h3>
             <div className="text-center py-8">
               <svg
-                className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                className="w-16 h-16 text-cyan-300 mx-auto mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -338,19 +338,19 @@ export default function ClientDashboardPage() {
         )}
 
         {/* Content Library Quick Access */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-cyan-100">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-gray-900">Marketing Content</h3>
             <button
               onClick={() => router.push('/client-portal/marketing')}
-              className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+              className="text-cyan-600 hover:text-cyan-700 text-sm font-medium"
             >
               View All →
             </button>
           </div>
           <div className="text-center py-8">
             <svg
-              className="w-16 h-16 text-gray-300 mx-auto mb-4"
+              className="w-16 h-16 text-cyan-300 mx-auto mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -368,7 +368,7 @@ export default function ClientDashboardPage() {
             </p>
             <button
               onClick={() => router.push('/client-portal/marketing')}
-              className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-6 py-2 rounded-lg font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-md"
             >
               Browse Content Library
             </button>
