@@ -227,7 +227,7 @@ export default function AddClientModal({
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Industry
+                    Industry <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -240,7 +240,7 @@ export default function AddClientModal({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
+                    Phone <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
