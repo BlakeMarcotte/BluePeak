@@ -187,9 +187,12 @@ export default function ABTestPage() {
       const result = await response.json();
 
       // Create new variant content
+      // Clean the original name by removing any existing variant suffix
+      const cleanOriginalName = originalContent.name.replace(/\s*-\s*Variant\s+[A-Z]$/i, '');
+
       const newVariant: GeneratedContent = {
         id: variantContent?.id || `variant_${Date.now()}`, // Keep existing ID if regenerating
-        name: `${originalContent.name} - Variant B`,
+        name: `${cleanOriginalName} - Variant B`,
         type: originalContent.type,
         content: result.content,
         wordCount: result.wordCount,
@@ -518,8 +521,14 @@ export default function ABTestPage() {
       updatedContent = updatedContent.map(c => {
         if (c.id === originalContent.id) {
           // Old original becomes a variant
+          // Add variant suffix to name if it doesn't have one
+          const newName = c.name.includes(' - Variant')
+            ? c.name
+            : `${c.name} - Variant A`;
+
           return {
             ...c,
+            name: newName,
             variantOfId: variantContent.id,
             variantLabel: 'Variant A',
             publicVoteId: undefined,
@@ -528,8 +537,12 @@ export default function ABTestPage() {
         }
         if (c.id === variantContent.id) {
           // Old variant becomes the new original
+          // Remove variant suffix from name (e.g., " - Variant B")
+          const cleanName = c.name.replace(/\s*-\s*Variant\s+[A-Z]$/i, '');
+
           return {
             ...c,
+            name: cleanName,
             variantOfId: undefined,
             variantLabel: 'Original',
             publicVoteId: undefined,
