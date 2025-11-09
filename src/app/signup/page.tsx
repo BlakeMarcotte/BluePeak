@@ -46,6 +46,11 @@ export default function SignupPage() {
       });
 
       if (!response.ok) {
+        // Check if this is a client account conflict
+        if (response.status === 409) {
+          const errorData = await response.json();
+          throw new Error('This email is associated with a client account. Please use the client portal to log in.');
+        }
         throw new Error('Failed to create user profile');
       }
 

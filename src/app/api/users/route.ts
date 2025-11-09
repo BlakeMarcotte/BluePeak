@@ -82,6 +82,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user already exists
+    const existingDoc = await adminDb.collection(USERS_COLLECTION).doc(id).get();
+
+    if (existingDoc.exists) {
+      const existingData = existingDoc.data();
+
+      // If existing user is a client, DO NOT overwrite
+      if (existingData?.role === 'client') {
+        return NextResponse.json(
+          { error: 'Cannot overwrite client account. User already exists as a client.' },
+          { status: 409 } // Conflict
+        );
+      }
+
+      // If user already exists with same role, just return it
+      if (existingData?.role === role) {
+        const user: User = {
+          id,
+          email: existingData.email || email,
+          displayName: existingData.displayName || displayName,
+          role: existingData.role || role,
+          clientId: existingData.clientId,
+          createdAt: existingData.createdAt?.toDate() || new Date(),
+          updatedAt: existingData.updatedAt?.toDate() || new Date(),
+          lastLoginAt: existingData.lastLoginAt?.toDate(),
+        };
+        return NextResponse.json({ user }, { status: 200 });
+      }
+
+      // Otherwise, return conflict
+      return NextResponse.json(
+        { error: 'User already exists with different role' },
+        { status: 409 }
+      );
+    }
+
+    // Create new user if doesn't exist
     const now = new Date();
     const userData = {
       email,

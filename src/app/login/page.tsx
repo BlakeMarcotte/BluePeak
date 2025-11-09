@@ -58,7 +58,7 @@ export default function LoginPage() {
       if (!userCheckResponse.ok) {
         console.log('User record not found, creating one...');
         // Create User record for legacy account
-        await fetch('/api/users', {
+        const createResponse = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -68,6 +68,24 @@ export default function LoginPage() {
             role: 'team_member',
           }),
         });
+
+        // If user creation returns 409, it means this is a client account
+        if (createResponse.status === 409) {
+          const errorData = await createResponse.json();
+          console.log('User is a client:', errorData.error);
+
+          // Sign them out immediately
+          await auth.signOut();
+
+          setError('This is a client account. Please use the client portal to log in.');
+          setLoading(false);
+
+          // Redirect to client portal login after 2 seconds
+          setTimeout(() => {
+            router.push('/client-portal/login');
+          }, 2000);
+          return;
+        }
       } else {
         // Update lastLoginAt for existing user
         await fetch('/api/users', {
