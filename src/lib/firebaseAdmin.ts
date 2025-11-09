@@ -28,8 +28,28 @@ if (missingVars.length > 0) {
 // Initialize Firebase Admin SDK
 if (!admin.apps.length && !initError) {
   try {
-    // Replace both literal \n strings and ensure proper newlines
-    const privateKey = requiredEnvVars.privateKey!.replace(/\\n/g, '\n');
+    // Handle multiple possible formats of the private key
+    let privateKey = requiredEnvVars.privateKey!;
+
+    // If the key is in JSON string format (enclosed in quotes), parse it
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      try {
+        privateKey = JSON.parse(privateKey);
+      } catch (e) {
+        console.warn('Failed to parse private key as JSON string, using as-is');
+      }
+    }
+
+    // Replace escaped newlines with actual newlines
+    // This handles both \\n (double backslash) and \n (single backslash)
+    privateKey = privateKey.replace(/\\n/g, '\n');
+
+    // Additional safety check: ensure the key has proper PEM format with newlines
+    if (!privateKey.includes('\n') && privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      console.error('❌ Private key appears to be missing newlines');
+      console.error('Key preview:', privateKey.substring(0, 100));
+      throw new Error('FIREBASE_PRIVATE_KEY must contain proper line breaks. Please ensure \\n characters are preserved in Vercel environment variable.');
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -44,6 +64,7 @@ if (!admin.apps.length && !initError) {
     console.log('Project ID:', requiredEnvVars.projectId);
     console.log('Client Email:', requiredEnvVars.clientEmail);
     console.log('Private Key Length:', privateKey.length);
+    console.log('Private Key has newlines:', privateKey.includes('\n'));
   } catch (error) {
     console.error('❌ Firebase Admin initialization error:', error);
     initError = error as Error;
