@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       }
 
       // If user already exists with same role, just return it
-      if (existingData?.role === role) {
+      if (existingData && existingData.role === role) {
         const user: User = {
           id,
           email: existingData.email || email,
