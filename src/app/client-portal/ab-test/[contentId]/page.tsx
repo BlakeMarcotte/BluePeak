@@ -71,6 +71,7 @@ export default function ABTestPage() {
     }
   };
 
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
@@ -695,11 +696,10 @@ export default function ABTestPage() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg font-semibold text-slate-900">{item.name}</h3>
-              <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                label === 'Original'
+              <span className={`px-2 py-0.5 text-xs font-medium rounded ${label === 'Original'
                   ? 'bg-blue-100 text-blue-700'
                   : 'bg-purple-100 text-purple-700'
-              }`}>
+                }`}>
                 {label}
               </span>
             </div>
@@ -1044,9 +1044,8 @@ export default function ABTestPage() {
                     }
                   }}
                   maxLength={60}
-                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    (editedPdfData.headline?.length || 0) > 55 ? 'border-yellow-500' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${(editedPdfData.headline?.length || 0) > 55 ? 'border-yellow-500' : 'border-slate-300'
+                    }`}
                   placeholder="Enter headline..."
                 />
                 {(editedPdfData.headline?.length || 0) > 55 && (
@@ -1068,9 +1067,8 @@ export default function ABTestPage() {
                   }}
                   maxLength={120}
                   rows={2}
-                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    (editedPdfData.subheadline?.length || 0) > 110 ? 'border-yellow-500' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${(editedPdfData.subheadline?.length || 0) > 110 ? 'border-yellow-500' : 'border-slate-300'
+                    }`}
                   placeholder="Enter subheadline..."
                 />
                 {(editedPdfData.subheadline?.length || 0) > 110 && (
@@ -1144,9 +1142,8 @@ export default function ABTestPage() {
                           }}
                           maxLength={150}
                           rows={2}
-                          className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm ${
-                            (benefit?.length || 0) > 140 ? 'border-yellow-500' : 'border-slate-300'
-                          }`}
+                          className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm ${(benefit?.length || 0) > 140 ? 'border-yellow-500' : 'border-slate-300'
+                            }`}
                           placeholder="Enter benefit..."
                         />
                         {(benefit?.length || 0) > 140 && (
@@ -1172,9 +1169,8 @@ export default function ABTestPage() {
                   }}
                   maxLength={80}
                   rows={2}
-                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    (editedPdfData.callToAction?.length || 0) > 75 ? 'border-yellow-500' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${(editedPdfData.callToAction?.length || 0) > 75 ? 'border-yellow-500' : 'border-slate-300'
+                    }`}
                   placeholder="Enter call to action..."
                 />
                 {(editedPdfData.callToAction?.length || 0) > 75 && (
@@ -1266,13 +1262,12 @@ export default function ABTestPage() {
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
                   rows={20}
-                  className={`w-full px-4 py-3 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm ${
-                    originalContent?.type === 'linkedin' && editedContent.length > 1300
+                  className={`w-full px-4 py-3 border rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm ${originalContent?.type === 'linkedin' && editedContent.length > 1300
                       ? 'border-red-500'
                       : editedContent.length > (originalContent?.type === 'linkedin' ? 1200 : 10000)
-                      ? 'border-yellow-500'
-                      : 'border-slate-300'
-                  }`}
+                        ? 'border-yellow-500'
+                        : 'border-slate-300'
+                    }`}
                   placeholder="Enter your content..."
                 />
                 {originalContent?.type === 'linkedin' && editedContent.length > 1200 && editedContent.length <= 1300 && (
