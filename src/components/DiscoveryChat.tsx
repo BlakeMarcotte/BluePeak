@@ -225,7 +225,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     <div className="flex flex-col h-[600px] bg-white rounded-lg shadow-lg">
       {/* Chat Header */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4 rounded-t-lg">
-        <h2 className="text-xl font-semibold">Discovery Call</h2>
+        <h2 className="text-xl font-semibold">Discovery Chat</h2>
         <p className="text-sm text-purple-100">Let's learn about your business needs</p>
       </div>
 

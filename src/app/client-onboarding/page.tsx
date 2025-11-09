@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
-import AddClientModal from '@/components/AddClientModal';
 import OnboardingPipeline from '@/components/OnboardingPipeline';
 import ProgressReportGenerator from '@/components/ProgressReportGenerator';
 import { Client } from '@/types';
@@ -16,7 +15,6 @@ type TabType = 'pipeline' | 'reports';
 export default function ClientOnboardingPage() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [clients, setClients] = useState<Client[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingProposal, setIsGeneratingProposal] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -51,17 +49,6 @@ export default function ClientOnboardingPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleClientAdded = (newClient: Client) => {
-    // Convert date strings to Date objects
-    const clientWithDates = {
-      ...newClient,
-      createdAt: new Date(newClient.createdAt),
-      updatedAt: new Date(newClient.updatedAt),
-      meetingDate: newClient.meetingDate ? new Date(newClient.meetingDate) : undefined,
-    };
-    setClients([clientWithDates, ...clients]);
   };
 
   const updateClient = async (clientId: string, updates: Partial<Client>) => {
@@ -281,34 +268,13 @@ export default function ClientOnboardingPage() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Client Onboarding
-                </h1>
-                <p className="text-gray-600">
-                  Manage active client onboarding pipelines and progress reporting
-                </p>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Client
-              </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Client Onboarding
+              </h1>
+              <p className="text-gray-600">
+                Manage active client onboarding pipelines and progress reporting
+              </p>
             </div>
           </div>
 
@@ -389,15 +355,9 @@ export default function ClientOnboardingPage() {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     No Active Onboardings
                   </h3>
-                  <p className="text-gray-600 mb-4">
-                    Add a new client to start the onboarding process
+                  <p className="text-gray-600">
+                    Clients will appear here once they begin the onboarding process
                   </p>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                  >
-                    Add Your First Client
-                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -449,13 +409,6 @@ export default function ClientOnboardingPage() {
           )}
         </main>
       </div>
-
-      <AddClientModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onClientAdded={handleClientAdded}
-        isQuickAdd
-      />
 
       {/* Proposal Generation Loading Modal */}
       {isGeneratingProposal && (
