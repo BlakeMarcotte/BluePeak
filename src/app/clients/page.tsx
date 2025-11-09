@@ -235,7 +235,7 @@ export default function ClientsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name, email, or company..."
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
               <div>
@@ -245,7 +245,7 @@ export default function ClientsPage() {
                 <select
                   value={filterStage}
                   onChange={(e) => setFilterStage(e.target.value as OnboardingStage | 'all')}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="all">All Stages</option>
                   {Object.entries(STAGE_LABELS).map(([stage, label]) => (

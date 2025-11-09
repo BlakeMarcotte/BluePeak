@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -21,18 +22,32 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/clients', label: 'Clients' },
-    { href: '/marketing', label: 'Marketing' },
     { href: '/client-onboarding', label: 'Client Onboarding' },
+    { href: '/marketing', label: 'Marketing' },
   ];
 
   return (
-    <header className="bg-white border-b border-slate-200">
+    <header className="bg-gradient-to-r from-white to-cyan-50 border-b border-cyan-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
+        <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <div className="flex items-center gap-8">
-            <Link href="/clients" className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold text-slate-900">BluePeak</h1>
+            <Link href="/clients" className="flex items-center gap-3 group">
+              <Image
+                src="/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png"
+                alt="BluePeak Logo"
+                width={40}
+                height={40}
+                className="object-contain transition-transform group-hover:scale-105"
+              />
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-900 to-cyan-600 bg-clip-text text-transparent">
+                  BluePeak
+                </h1>
+                <span className="text-xs bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 py-1 rounded-full font-medium">
+                  Team
+                </span>
+              </div>
             </Link>
 
             {/* Navigation Links */}
@@ -43,10 +58,10 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       isActive
-                        ? 'bg-slate-100 text-slate-900'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                     }`}
                   >
                     {link.label}
@@ -57,35 +72,35 @@ export default function Navbar() {
           </div>
 
           {/* User Menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-3">
               <div className="text-right">
-                <p className="text-sm font-medium text-slate-900">{user?.displayName}</p>
-                <p className="text-xs text-slate-500">{user?.email}</p>
+                <p className="text-sm font-medium text-gray-900">{user?.displayName}</p>
+                <p className="text-xs text-gray-600">{user?.email}</p>
               </div>
-              <div className="h-8 w-px bg-slate-200"></div>
+              <div className="h-8 w-px bg-gray-300"></div>
             </div>
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all"
             >
-              Sign out
+              Sign Out
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        <nav className="md:hidden pb-3 pt-2 space-y-1 border-t border-slate-100 mt-2">
+        <nav className="md:hidden pb-3 pt-2 space-y-1 border-t border-cyan-100 mt-2">
           {navLinks.map((link) => {
             const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                className={`block px-4 py-2 rounded-lg text-sm font-medium ${
                   isActive
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                 }`}
               >
                 {link.label}
