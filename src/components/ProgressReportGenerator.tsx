@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { ProgressReportData } from '@/types';
+import { useState, useEffect } from 'react';
+import { ProgressReportData, Client } from '@/types';
 
-export default function ProgressReportGenerator() {
+interface ProgressReportGeneratorProps {
+  clients?: Client[];
+}
+
+export default function ProgressReportGenerator({ clients = [] }: ProgressReportGeneratorProps) {
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [formData, setFormData] = useState<ProgressReportData>({
     clientId: '',
     clientName: '',
@@ -18,6 +23,101 @@ export default function ProgressReportGenerator() {
   const [tone, setTone] = useState<'formal' | 'casual' | 'detailed'>('casual');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showAutoFillBanner, setShowAutoFillBanner] = useState(false);
+  const [autoFilledCount, setAutoFilledCount] = useState(0);
+
+  // Content type icons and colors
+  const contentTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
+    'blog': { icon: '📝', color: 'bg-blue-100 text-blue-700', label: 'Blog Posts' },
+    'linkedin': { icon: '💼', color: 'bg-indigo-100 text-indigo-700', label: 'LinkedIn' },
+    'twitter': { icon: '🐦', color: 'bg-sky-100 text-sky-700', label: 'Twitter' },
+    'email': { icon: '📧', color: 'bg-purple-100 text-purple-700', label: 'Email' },
+    'ad-copy': { icon: '📢', color: 'bg-orange-100 text-orange-700', label: 'Ad Copy' },
+    'pdf-onepager': { icon: '📄', color: 'bg-green-100 text-green-700', label: 'PDF' },
+  };
+
+  // Calculate form completion percentage
+  const calculateProgress = () => {
+    let filledFields = 0;
+    let totalFields = 7; // clientName, reportPeriod, tasks, metrics, deliverables, highlights, blockers
+
+    if (formData.clientName) filledFields++;
+    if (formData.reportPeriod) filledFields++;
+    if (formData.completedTasks.some(t => t.trim())) filledFields++;
+    if (formData.metrics.some(m => m.label && m.value)) filledFields++;
+    if (formData.upcomingDeliverables.some(d => d.trim())) filledFields++;
+    if (formData.highlights) filledFields++;
+    if (formData.blockers) filledFields++;
+
+    return Math.round((filledFields / totalFields) * 100);
+  };
+
+  // Auto-populate form when client is selected
+  useEffect(() => {
+    if (!selectedClientId) return;
+
+    const selectedClient = clients.find(c => c.id === selectedClientId);
+    if (!selectedClient) return;
+
+    const marketingContent = selectedClient.marketingContent || [];
+
+    // Group content by type and count
+    const contentByType: Record<string, number> = {};
+    marketingContent.forEach(content => {
+      contentByType[content.type] = (contentByType[content.type] || 0) + 1;
+    });
+
+    // Generate completed tasks from marketing content
+    const tasks: string[] = [];
+    Object.entries(contentByType).forEach(([type, count]) => {
+      const typeLabel = {
+        'blog': 'blog post',
+        'linkedin': 'LinkedIn post',
+        'twitter': 'Twitter thread',
+        'email': 'email campaign',
+        'ad-copy': 'ad copy set',
+        'pdf-onepager': 'PDF one-pager'
+      }[type] || type;
+
+      const plural = count > 1 ? typeLabel + 's' : typeLabel;
+      tasks.push(`Created ${count} ${plural}`);
+    });
+
+    // Generate suggested metrics based on content
+    const totalContent = marketingContent.length;
+    const suggestedMetrics = totalContent > 0 ? [
+      { label: 'Content Pieces Delivered', value: totalContent.toString() },
+      { label: 'Platforms Covered', value: Object.keys(contentByType).length.toString() },
+    ] : [{ label: '', value: '' }];
+
+    // Generate suggested upcoming deliverables
+    const hasContent = marketingContent.length > 0;
+    const suggestedDeliverables = hasContent ? [
+      'Schedule and publish created content across channels',
+      'Monitor engagement metrics and performance',
+      'Create next batch of marketing materials based on performance data',
+    ] : [''];
+
+    // Set form data with auto-populated tasks
+    setFormData({
+      clientId: selectedClient.id,
+      clientName: selectedClient.company,
+      reportPeriod: '',
+      completedTasks: tasks.length > 0 ? tasks : [''],
+      metrics: suggestedMetrics,
+      upcomingDeliverables: suggestedDeliverables,
+      blockers: '',
+      highlights: marketingContent.length > 0 ? `Successfully generated ${marketingContent.length} high-quality marketing materials tailored to ${selectedClient.company}'s brand and audience` : '',
+    });
+
+    // Show auto-fill banner with animation
+    if (marketingContent.length > 0) {
+      const fieldsCount = tasks.length + suggestedMetrics.length + suggestedDeliverables.length + 2; // +2 for clientName and highlights
+      setAutoFilledCount(fieldsCount);
+      setShowAutoFillBanner(true);
+      setTimeout(() => setShowAutoFillBanner(false), 5000); // Hide after 5 seconds
+    }
+  }, [selectedClientId, clients]);
 
   const handleTaskChange = (index: number, value: string) => {
     const newTasks = [...formData.completedTasks];
@@ -108,15 +208,177 @@ export default function ProgressReportGenerator() {
     alert('Report copied to clipboard!');
   };
 
+  // Calculate report metadata
+  const getReportMetadata = () => {
+    if (!generatedReport) return { wordCount: 0, readingTime: 0, suggestedSubject: '' };
+
+    const wordCount = generatedReport.trim().split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+    const suggestedSubject = `Progress Update - ${formData.clientName} - ${formData.reportPeriod}`;
+
+    return { wordCount, readingTime, suggestedSubject };
+  };
+
+  // Format the report for email-style display
+  const formatReport = (text: string) => {
+    // Split into lines
+    const lines = text.split('\n');
+
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
+
+      // Skip empty lines
+      if (!trimmedLine) {
+        return <div key={index} className="h-4" />;
+      }
+
+      // Check for greeting (starts with Hi, Hello, Dear, etc.)
+      if (trimmedLine.match(/^(Hi|Hello|Dear|Greetings)/i) && index < 3) {
+        return (
+          <p key={index} className="text-lg font-medium text-gray-900 mb-4">
+            {trimmedLine}
+          </p>
+        );
+      }
+
+      // Check for headings (all caps or ends with colon)
+      if (trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 5 && trimmedLine.length < 50) {
+        return (
+          <h3 key={index} className="text-base font-bold text-gray-900 mt-6 mb-3 uppercase tracking-wide">
+            {trimmedLine}
+          </h3>
+        );
+      }
+
+      // Check for section headers (ends with colon)
+      if (trimmedLine.endsWith(':') && trimmedLine.length < 60) {
+        return (
+          <h4 key={index} className="text-base font-semibold text-gray-900 mt-4 mb-2">
+            {trimmedLine}
+          </h4>
+        );
+      }
+
+      // Check for bullet points
+      if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•') || trimmedLine.match(/^\d+\./)) {
+        return (
+          <li key={index} className="text-gray-700 leading-relaxed ml-4 mb-1">
+            {trimmedLine.replace(/^[-•]\s*/, '').replace(/^\d+\.\s*/, '')}
+          </li>
+        );
+      }
+
+      // Check for sign-off (Best, Regards, Sincerely, etc.)
+      if (trimmedLine.match(/^(Best|Regards|Sincerely|Warm regards|Thank you|Cheers)/i) && index > lines.length - 5) {
+        return (
+          <p key={index} className="text-gray-900 mt-6 mb-1 font-medium">
+            {trimmedLine}
+          </p>
+        );
+      }
+
+      // Regular paragraph
+      return (
+        <p key={index} className="text-gray-700 leading-relaxed mb-3">
+          {trimmedLine}
+        </p>
+      );
+    });
+  };
+
+  const metadata = getReportMetadata();
+
+  const selectedClient = clients.find(c => c.id === selectedClientId);
+  const contentByType = selectedClient?.marketingContent?.reduce((acc, content) => {
+    acc[content.type] = (acc[content.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  const progress = calculateProgress();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Input Form */}
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Progress Report Generator
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Progress Report Generator
+          </h2>
+          {/* Progress Indicator */}
+          {progress > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-700">{progress}%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Auto-Fill Banner */}
+        {showAutoFillBanner && (
+          <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 animate-pulse">
+            <div className="flex items-center gap-2 text-green-800">
+              <span className="text-xl">✨</span>
+              <span className="font-medium text-sm">
+                Auto-populated {autoFilledCount} fields from marketing content!
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
+          {/* Client Selector */}
+          {clients.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Client (Auto-populate from marketing content)
+              </label>
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+              >
+                <option value="">-- Select a client --</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.company} ({client.marketingContent?.length || 0} content pieces)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Content Summary Card */}
+          {selectedClient && selectedClient.marketingContent && selectedClient.marketingContent.length > 0 && (
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Content Created</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(contentByType).map(([type, count]) => {
+                  const config = contentTypeConfig[type];
+                  return (
+                    <div key={type} className={`${config.color} rounded-lg px-3 py-2 flex items-center gap-2`}>
+                      <span className="text-lg">{config.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate">{config.label}</div>
+                        <div className="text-lg font-bold">{count}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-3 pt-3 border-t border-purple-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-gray-700">Total Content</span>
+                  <span className="font-bold text-purple-600">{selectedClient.marketingContent.length} pieces</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Client Info */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -128,7 +390,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, clientName: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               placeholder="e.g., Acme Corporation"
             />
           </div>
@@ -143,7 +405,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, reportPeriod: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
               placeholder="e.g., Week of Nov 4-8 or October 2024"
             />
           </div>
@@ -159,7 +421,7 @@ export default function ProgressReportGenerator() {
                   type="text"
                   value={task}
                   onChange={(e) => handleTaskChange(index, e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="e.g., Published 3 blog posts"
                 />
                 {formData.completedTasks.length > 1 && (
@@ -193,7 +455,7 @@ export default function ProgressReportGenerator() {
                   onChange={(e) =>
                     handleMetricChange(index, 'label', e.target.value)
                   }
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="Metric name"
                 />
                 <input
@@ -202,7 +464,7 @@ export default function ProgressReportGenerator() {
                   onChange={(e) =>
                     handleMetricChange(index, 'value', e.target.value)
                   }
-                  className="w-32 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-32 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="Value"
                 />
                 {formData.metrics.length > 1 && (
@@ -236,7 +498,7 @@ export default function ProgressReportGenerator() {
                   onChange={(e) =>
                     handleDeliverableChange(index, e.target.value)
                   }
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
                   placeholder="e.g., Email campaign launching next week"
                 />
                 {formData.upcomingDeliverables.length > 1 && (
@@ -267,7 +529,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, highlights: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
               rows={2}
               placeholder="Any special wins or highlights to emphasize"
             />
@@ -282,7 +544,7 @@ export default function ProgressReportGenerator() {
               onChange={(e) =>
                 setFormData({ ...formData, blockers: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder:text-gray-400"
               rows={2}
               placeholder="Any challenges or blockers to mention"
             />
@@ -365,10 +627,53 @@ export default function ProgressReportGenerator() {
         )}
 
         {generatedReport && (
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-gray-800">
-                {generatedReport}
+          <div className="space-y-4">
+            {/* Report Metadata */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="grid grid-cols-3 gap-4 mb-3">
+                <div>
+                  <div className="text-xs font-medium text-purple-600 mb-1">Word Count</div>
+                  <div className="text-lg font-bold text-purple-900">{metadata.wordCount}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-purple-600 mb-1">Reading Time</div>
+                  <div className="text-lg font-bold text-purple-900">{metadata.readingTime} min</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-purple-600 mb-1">Tone</div>
+                  <div className="text-lg font-bold text-purple-900 capitalize">{tone}</div>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-purple-200">
+                <div className="text-xs font-medium text-purple-600 mb-1">Suggested Email Subject</div>
+                <div className="text-sm font-medium text-purple-900 break-words">{metadata.suggestedSubject}</div>
+              </div>
+            </div>
+
+            {/* Email Preview */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+              {/* Email Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-4">
+                <div className="text-xs font-medium opacity-80 mb-1">EMAIL PREVIEW</div>
+                <div className="font-semibold">{metadata.suggestedSubject}</div>
+              </div>
+
+              {/* Email Body */}
+              <div className="p-8 bg-white" style={{ fontFamily: 'Georgia, serif' }}>
+                <div className="max-w-2xl">
+                  {formatReport(generatedReport)}
+                </div>
+              </div>
+
+              {/* Email Footer */}
+              <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div>BluePeak Marketing • Professional Progress Report</div>
+                  <div className="flex items-center gap-4">
+                    <span>{metadata.wordCount} words</span>
+                    <span>{metadata.readingTime} min read</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

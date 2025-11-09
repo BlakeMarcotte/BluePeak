@@ -64,7 +64,7 @@ Write a professional progress report email that:
 The email should feel personal and show genuine care for the client's success. Transform dry data into a compelling story of progress and results.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 2048,
       messages: [
         {
