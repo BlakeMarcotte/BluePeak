@@ -14,8 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BluePeak Content Studio",
+  title: "BluePeak Marketing",
   description: "AI-powered content generation platform for BluePeak Marketing",
+  icons: {
+    icon: "/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png",
+    apple: "/Gemini_Generated_Image_gxqzr3gxqzr3gxqz (1).png",
+  },
 };
 
 export default function RootLayout({
