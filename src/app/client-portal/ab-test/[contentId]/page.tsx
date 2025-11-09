@@ -521,10 +521,9 @@ export default function ABTestPage() {
       updatedContent = updatedContent.map(c => {
         if (c.id === originalContent.id) {
           // Old original becomes a variant
-          // Add variant suffix to name if it doesn't have one
-          const newName = c.name.includes(' - Variant')
-            ? c.name
-            : `${c.name} - Variant A`;
+          // Clean any existing variant suffix first, then add " - Variant A"
+          const cleanName = c.name.replace(/\s*-\s*Variant\s+[A-Z]$/i, '');
+          const newName = `${cleanName} - Variant A`;
 
           return {
             ...c,
